@@ -16,9 +16,14 @@ def request_handler(token):
 
 
 @pytest.fixture(scope="session")
+def spotify_token() -> str:
+    """Returns a valid Spotify access token using client credentials flow."""
+    return AuthClient().get_access_token()
+
+
+@pytest.fixture(scope="session")
 def api_clients(request_handler):
     class Clients:
         playlist = PlaylistClient(request_handler)
-        # Add more as needed
 
     return Clients()
