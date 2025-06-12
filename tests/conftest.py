@@ -1,13 +1,17 @@
-
 import pytest
-from component.api_clients.auth_client import AuthClient
-from component.api_clients.playlist_client import PlaylistClient
-from infra.request_handler import RequestHandler
+from infra.api_clients.auth_client import AuthClient
+from infra.api_clients.playlist_client import PlaylistClient
+from infra.http.request_handler import RequestHandler
 
 
 @pytest.fixture(scope="session")
 def token() -> str:
     return AuthClient().get_access_token()
+
+
+@pytest.fixture(scope="session")
+def default_playlist_id():
+    return "3cEYpjA9oz9GiPac4AsH4n"
 
 
 @pytest.fixture(scope="session")

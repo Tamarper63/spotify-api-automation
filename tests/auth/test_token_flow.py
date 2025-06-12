@@ -10,7 +10,7 @@ def test_token_success_with_valid_credentials(api_clients):
 
 @pytest.mark.negative
 def test_token_fails_with_invalid_credentials(monkeypatch):
-    from component.api_clients.auth_client import AuthClient
+    from infra.api_clients.auth_client import AuthClient
 
     monkeypatch.setenv("SPOTIFY_CLIENT_ID", "invalid")
     monkeypatch.setenv("SPOTIFY_CLIENT_SECRET", "invalid")

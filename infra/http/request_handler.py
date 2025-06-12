@@ -1,7 +1,7 @@
 # infra/request_handler.py
 
 from typing import Optional, Dict, Any
-from infra.request_sender import _send_request  # ✅ IMPORT HERE
+from infra.http.request_sender import _send_request  # ✅ IMPORT HERE
 
 
 class RequestHandler:
