@@ -1,10 +1,9 @@
 # api_clients/auth_client.py
 
 import base64
-import os
 import requests
 from dotenv import load_dotenv
-from infra.config_manager import ConfigManager
+from infra.http.config_manager import ConfigManager
 
 load_dotenv()  # Load SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET from .env
 

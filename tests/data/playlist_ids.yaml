@@ -1,3 +1,2 @@
-valid_playlists:
-  - id: "3cEYpjA9oz9GiPac4AsH4n"
-    expected_name: "Spotify Web API Testing playlist"
+playlist_ids:
+  - "3cEYpjA9oz9GiPac4AsH4n"
