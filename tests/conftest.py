@@ -1,29 +1,25 @@
-# tests/conftest.py
+
 import pytest
+from component.api_clients.auth_client import AuthClient
+from component.api_clients.playlist_client import PlaylistClient
 from infra.request_handler import RequestHandler
-from api_clients.playlist_client import PlaylistClient
-from api_clients.auth_client import AuthClient
 
 
 @pytest.fixture(scope="session")
-def token():
+def token() -> str:
     return AuthClient().get_access_token()
 
 
 @pytest.fixture(scope="session")
-def request_handler(token):
+def request_handler(token) -> RequestHandler:
     return RequestHandler(token)
-
-
-@pytest.fixture(scope="session")
-def spotify_token() -> str:
-    """Returns a valid Spotify access token using client credentials flow."""
-    return AuthClient().get_access_token()
 
 
 @pytest.fixture(scope="session")
 def api_clients(request_handler):
     class Clients:
+        auth = AuthClient()
         playlist = PlaylistClient(request_handler)
+        # Add more clients here in the future
 
     return Clients()

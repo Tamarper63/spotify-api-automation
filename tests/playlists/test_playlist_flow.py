@@ -1,5 +1,8 @@
 import pytest
 
+from infra.assertions.assertion_manager import assert_status_code_ok, assert_keys_exist
+from utils.yaml_loader import load_yaml_data
+
 
 @pytest.mark.smoke
 def test_create_playlist_should_return_201(api_clients):
@@ -16,8 +19,10 @@ def test_add_tracks_should_return_201(api_clients):
     assert response.status_code == 201
 
 
-def test_get_playlist_should_return_200(api_clients):
-    playlist_id = "some_id"
-    response = api_clients.playlist.get_playlist(playlist_id)
-    assert response.status_code == 200
-    assert "name" in response.json()
+@pytest.mark.parametrize("playlist", load_yaml_data("playlist_ids.yaml")["valid_playlists"])
+@pytest.mark.smoke
+def test_get_playlist_should_return_200(api_clients, playlist):
+    response = api_clients.playlist.get_playlist(playlist["id"])
+    assert_status_code_ok(response, 200, f"GET /playlists/{playlist['id']}")
+    assert_keys_exist(response.json(), ["id", "name", "tracks"])
+    assert response.json()["name"] == playlist["expected_name"]
