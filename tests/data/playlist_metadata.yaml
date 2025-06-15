@@ -1,7 +1,7 @@
 playlist_metadata:
-  id: "3cEYpjA9oz9GiPac4AsH4n"
-  name: "Spotify Web API Testing playlist"
+  id: "7yyTti5oj0AYY68Zlocb1z"
+  name: "Automation Test Playlist"
   public: true
   type: "playlist"
-  owner.display_name: "JMPerez²"
-  tracks.total: 5
+  owner.display_name: "Oliver"
+  tracks.total: 7

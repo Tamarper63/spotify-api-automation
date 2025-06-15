@@ -1,61 +1,48 @@
-# infra/request_handler.py
 
-from typing import Optional, Dict, Any
-from infra.http.request_sender import _send_request  # ✅ IMPORT HERE
+from infra.http.request_sender import _send_request
 
 
 class RequestHandler:
-    """
-    High-level HTTP handler that wraps the raw _send_request function
-    and manages auth headers per request.
-    """
     def __init__(self, token: str):
         self.token = token
-
-    def _build_headers(self, extra_headers: Optional[Dict[str, str]] = None) -> Dict[str, str]:
-        headers = {
+        self.base_url = "https://api.spotify.com/v1"
+        self.headers = {
             "Authorization": f"Bearer {self.token}",
             "Content-Type": "application/json"
         }
-        if extra_headers:
-            headers.update(extra_headers)
-        return headers
 
-    def get(self, url: str, params: Optional[Dict[str, Any]] = None,
-            headers: Optional[Dict[str, str]] = None, timeout: int = 10):
-        return _send_request(                       # ✅ USED HERE
+    def get(self, endpoint: str, params=None):
+        url = f"{self.base_url}{endpoint}"
+        return _send_request(
             url=url,
             method="GET",
-            headers=self._build_headers(headers),
-            params=params,
-            timeout=timeout
+            headers=self.headers,
+            params=params
         )
 
-    def post(self, url: str, json: Optional[Dict[str, Any]] = None,
-             headers: Optional[Dict[str, str]] = None, timeout: int = 10):
-        return _send_request(                       # ✅ USED HERE
+    def post(self, endpoint: str, json=None):
+        url = f"{self.base_url}{endpoint}"
+        return _send_request(
             url=url,
             method="POST",
-            headers=self._build_headers(headers),
-            json=json,
-            timeout=timeout
+            headers=self.headers,
+            json=json
         )
 
-    def put(self, url: str, json: Optional[Dict[str, Any]] = None,
-            headers: Optional[Dict[str, str]] = None, timeout: int = 10):
-        return _send_request(                       # ✅ USED HERE
+    def put(self, endpoint: str, json=None):
+        url = f"{self.base_url}{endpoint}"
+        return _send_request(
             url=url,
             method="PUT",
-            headers=self._build_headers(headers),
-            json=json,
-            timeout=timeout
+            headers=self.headers,
+            json=json
         )
 
-    def delete(self, url: str,
-               headers: Optional[Dict[str, str]] = None, timeout: int = 10):
-        return _send_request(                       # ✅ USED HERE
+    def delete(self, endpoint: str, json=None):
+        url = f"{self.base_url}{endpoint}"
+        return _send_request(
             url=url,
             method="DELETE",
-            headers=self._build_headers(headers),
-            timeout=timeout
+            headers=self.headers,
+            json=json
         )

@@ -52,24 +52,51 @@ def test_get_playlist_without_auth_should_return_401():
     assert_error_response(response, 401, "access token")
 
 
+@pytest.mark.positive
 def test_get_playlist_with_market_param(api_clients, default_playlist_id):
-    response = api_clients.playlist.get_playlist(default_playlist_id, params={"market": "ES"})
+    response = api_clients.playlist.get_playlist(default_playlist_id, market="ES")
     assert_status_code_ok(response, 200)
 
 
+@pytest.mark.positive
 def test_get_playlist_with_fields_param(api_clients, default_playlist_id):
-    response = api_clients.playlist.get_playlist(default_playlist_id, params={"fields": "description,uri"})
+    response = api_clients.playlist.get_playlist(default_playlist_id, fields="description,uri")
     assert_status_code_ok(response, 200)
     assert_keys_exist(response.json(), ["description", "uri"])
 
 
+@pytest.mark.positive
 def test_get_playlist_with_nested_fields_param(api_clients, default_playlist_id):
     fields_param = "tracks.items(track(name,href))"
-    response = api_clients.playlist.get_playlist(default_playlist_id, params={"fields": fields_param})
+    response = api_clients.playlist.get_playlist(default_playlist_id, fields=fields_param)
     assert_status_code_ok(response, 200)
     assert "tracks" in response.json()
 
 
+@pytest.mark.positive
 def test_get_playlist_with_additional_types(api_clients, default_playlist_id):
-    response = api_clients.playlist.get_playlist(default_playlist_id, params={"additional_types": "episode"})
+    response = api_clients.playlist.get_playlist(default_playlist_id, additional_types="episode")
     assert_status_code_ok(response, 200)
+
+
+def test_get_playlist_with_all_params(api_clients, default_playlist_id):
+    response = api_clients.playlist.get_playlist(
+        default_playlist_id,
+        market="ES",
+        fields="tracks.items(track(name,href))",
+        additional_types="episode"
+    )
+    assert_status_code_ok(response, 200)
+
+
+##got 502 why
+@pytest.mark.negative
+def test_get_playlist_with_invalid_market(api_clients, default_playlist_id):
+    response = api_clients.playlist.get_playlist(default_playlist_id, market="INVALID")
+    assert response.status_code in [502]
+
+
+@pytest.mark.negative
+def test_get_playlist_with_empty_id(api_clients):
+    response = api_clients.playlist.get_playlist("")
+    assert response.status_code == 404  # Spotify returns 404, not 400

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, HttpUrl
-from typing import Optional, List
+from typing import Optional, Dict
 
 
 class ExternalUrls(BaseModel):
@@ -7,24 +7,18 @@ class ExternalUrls(BaseModel):
 
 
 class Owner(BaseModel):
-    display_name: Optional[str]
     id: str
     type: str
     uri: str
+    display_name: Optional[str]
 
 
-class TrackItem(BaseModel):
-    added_at: Optional[str]
-    track: Optional[dict]  # Could be replaced with Track model for full validation
-
-
-class Tracks(BaseModel):
+class TracksInfo(BaseModel):
     href: HttpUrl
     total: int
-    items: Optional[List[TrackItem]]
 
 
-class PlaylistResponse(BaseModel):
+class CreatePlaylistResponse(BaseModel):
     id: str
     name: str
     public: Optional[bool]
@@ -32,6 +26,6 @@ class PlaylistResponse(BaseModel):
     external_urls: ExternalUrls
     href: HttpUrl
     owner: Owner
-    tracks: Tracks
+    tracks: TracksInfo
     type: str
     uri: str
