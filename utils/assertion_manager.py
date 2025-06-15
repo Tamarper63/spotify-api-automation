@@ -73,3 +73,8 @@ def assert_error_response(response, expected_status: int, expected_message_subst
             f"❌ Error message does not contain expected text. "
             f"Expected to include: '{expected_message_substring}', Got: '{error['message']}'"
         )
+
+
+def assert_token_is_valid(token: str):
+    assert isinstance(token, str), "❌ Token must be a string"
+    assert len(token) > 10, f"❌ Token is too short: {len(token)} chars"
