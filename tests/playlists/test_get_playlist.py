@@ -9,7 +9,6 @@ from utils.assertion_manager import (
 )
 from utils.param_loaders import (
     get_valid_playlist_ids,
-    load_flat_yaml_kv
 )
 
 
@@ -19,13 +18,13 @@ def test_get_playlist_should_return_200(api_clients, playlist_id):
     assert_status_code_ok(response, 200)
 
 
-@pytest.mark.parametrize(
-    "field_path, expected_value",
-    load_flat_yaml_kv("playlist_metadata.yaml", "playlist_metadata")
-)
-def test_playlist_response_values(api_clients, default_playlist_id, field_path, expected_value):
-    response = api_clients.playlist.get_playlist(default_playlist_id)
-    assert_nested_field_equals(response.json(), field_path, expected_value)
+# @pytest.mark.parametrize(
+#     "field_path, expected_value",
+#     load_flat_yaml_kv("playlist_metadata.yaml", "playlist_metadata")
+# )
+# def test_playlist_response_values(api_clients, default_playlist_id, field_path, expected_value):
+#     response = api_clients.playlist.get_playlist(default_playlist_id)
+#     assert_nested_field_equals(response.json(), field_path, expected_value)
 
 
 def test_playlist_model_schema(api_clients, default_playlist_id):

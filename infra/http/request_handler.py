@@ -29,13 +29,15 @@ class RequestHandler:
             json=json
         )
 
-    def put(self, endpoint: str, json=None):
+    def put(self, endpoint: str, json=None, data=None, custom_headers=None):
         url = f"{self.base_url}{endpoint}"
+        headers = custom_headers if custom_headers else self.headers
         return _send_request(
             url=url,
             method="PUT",
-            headers=self.headers,
-            json=json
+            headers=headers,
+            json=json,
+            data=data
         )
 
     def delete(self, endpoint: str, json=None):
@@ -46,3 +48,13 @@ class RequestHandler:
             headers=self.headers,
             json=json
         )
+
+    def delete_with_body(self, endpoint: str, json=None):
+        url = f"{self.base_url}{endpoint}"
+        return _send_request(
+            url=url,
+            method="DELETE",
+            headers=self.headers,
+            json=json
+        )
+

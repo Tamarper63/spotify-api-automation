@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv()  # Load from .env file into os.environ
+load_dotenv()
 
 
 class ConfigManager:
