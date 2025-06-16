@@ -35,3 +35,24 @@ class PlaylistResponse(BaseModel):
     tracks: Tracks
     type: str
     uri: str
+
+
+class Track(BaseModel):
+    id: Optional[str]
+    name: Optional[str]
+    uri: Optional[str]
+    duration_ms: Optional[int]
+    explicit: Optional[bool]
+    href: Optional[HttpUrl]
+    preview_url: Optional[str]
+    type: Optional[str]
+
+
+class PlaylistTrackResponse(BaseModel):
+    href: HttpUrl
+    items: List[TrackItem]
+    limit: Optional[int]
+    next: Optional[str]
+    offset: Optional[int]
+    previous: Optional[str]
+    total: int

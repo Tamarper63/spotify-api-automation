@@ -51,6 +51,6 @@ def test_remove_track_without_token_should_return_401(default_playlist_id, sampl
     }
     response = requests.delete(
         f"https://api.spotify.com/v1/playlists/{default_playlist_id}/tracks",
-        json=payload  # No auth header
+        json=payload
     )
     assert_error_response(response, 401)
