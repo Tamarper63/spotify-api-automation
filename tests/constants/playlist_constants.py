@@ -20,3 +20,30 @@ INVALID_USER_ID_CASES = [
     ("", 400),
     (None, 403),
 ]
+
+
+# For parametrize
+INVALID_PLAYLIST_IDS = ["invalid_id", "123", "!!!"]
+INVALID_MARKET = "INVALID"
+VALID_MARKET = "ES"
+NESTED_FIELDS = "tracks.items(track(name,href))"
+SIMPLE_FIELDS = "description,uri"
+ADDITIONAL_TYPES = "episode"
+
+# Playlist URL for unauth test
+DEFAULT_PLAYLIST_URL = "https://api.spotify.com/v1/playlists/3cEYpjA9oz9GiPac4AsH4n"
+
+GET_PLAYLIST_ITEMS_KEYS = ["items", "href", "limit", "total"]
+
+PLAYLIST_ITEMS_KEYS = ["items", "href", "limit", "total"]
+
+DEFAULT_STATUS_OK = 200
+
+EXPECTED_KEYS_GET_PLAYLIST_ITEMS = [
+    "items",
+    "href",
+    "limit",
+    "total"
+]
+
+PLAYLIST_ITEMS_OPTIONAL_PARAMS_FILE = "playlist_items_params.yaml"

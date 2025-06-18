@@ -1,0 +1,7 @@
+optional_params:
+  - market: "US"
+    limit: 5
+    offset: 0
+  - market: "IL"
+    limit: 10
+    offset: 5
