@@ -1,15 +1,19 @@
 import os
+import time
 import pytest
+from dotenv import load_dotenv
 
 from infra.api_clients.auth_client import AuthClient
 from infra.api_clients.playlist_client import PlaylistClient
 from infra.api_clients.user_client import UserClient
 from infra.auth.token_manager import TokenManager
 from infra.http.request_handler import RequestHandler
-from dotenv import load_dotenv
 
 load_dotenv()
 
+# =======================
+# Fixtures
+# =======================
 
 @pytest.fixture
 def valid_playlist_id() -> str:
@@ -26,15 +30,14 @@ def invalid_track_uri() -> str:
     return "spotify:track:invalidtrackuri"
 
 
-# Use a real playlist ID you control or create one dynamically in a setup
 @pytest.fixture(scope="session")
 def default_playlist_id() -> str:
-    return "7yyTti5oj0AYY68Zlocb1z"  # replace with your test playlist ID
+    return os.getenv("DEFAULT_PLAYLIST_ID", "7yyTti5oj0AYY68Zlocb1z")
 
 
 @pytest.fixture(scope="session")
 def sample_track_uri() -> str:
-    return "spotify:track:4iV5W9uYEdYUVa79Axb7Rh"  # valid public track
+    return "spotify:track:4iV5W9uYEdYUVa79Axb7Rh"
 
 
 @pytest.fixture(scope="session")
@@ -45,7 +48,6 @@ def sample_uris() -> list[str]:
     ]
 
 
-# Default client credentials token (for read-only endpoints)
 @pytest.fixture(scope="session")
 def token() -> str:
     return TokenManager.get_token()
@@ -54,11 +56,6 @@ def token() -> str:
 @pytest.fixture(scope="session")
 def user_token() -> str:
     return TokenManager.get_user_token()
-
-
-@pytest.fixture(scope="session")
-def default_playlist_id():
-    return os.getenv("DEFAULT_PLAYLIST_ID")
 
 
 @pytest.fixture(scope="session")
@@ -77,15 +74,40 @@ def api_clients(request_handler):
         auth = AuthClient()
         playlist = PlaylistClient(request_handler)
         user = UserClient(request_handler)
-
     return Clients()
 
 
-# 🔐 Use this in tests that require user-scoped endpoints
 @pytest.fixture(scope="session")
 def user_api_clients(user_request_handler):
     class Clients:
         playlist = PlaylistClient(user_request_handler)
         user = UserClient(user_request_handler)
-
     return Clients()
+
+
+# =======================
+# HTML Report Hook (pytest-html)
+# =======================
+
+def pytest_runtest_logstart(nodeid, location):
+    # Initialize a log container per test node
+    pytest.current_test_node = {"perf_logs": []}
+
+
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    outcome = yield
+    report = outcome.get_result()
+    if report.when == "call":
+        perf_logs = getattr(pytest, "current_test_node", {}).get("perf_logs", [])
+        if perf_logs:
+            # Append all performance logs to HTML report under "API Requests"
+            report.sections.append(("API Requests", "\n".join(perf_logs)))
+
+
+@pytest.fixture
+def unauthenticated_playlist_client():
+    from infra.http.request_handler import RequestHandler
+    from infra.api_clients.playlist_client import PlaylistClient
+
+    return PlaylistClient(RequestHandler(token=""))

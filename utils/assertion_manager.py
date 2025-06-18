@@ -53,28 +53,72 @@ def assert_nested_field_equals(response_json: dict, field_path: str, expected_va
     )
 
 
-def assert_error_response(response, expected_status: int, expected_message_substring: str = ""):
-    assert response.status_code == expected_status, (
-        f"❌ Expected status {expected_status}, got {response.status_code}. Response: {response.text}"
-    )
-
-    body = response.json()
-    assert "error" in body, "❌ 'error' object missing in response"
-
-    error = body["error"]
-    assert "status" in error and "message" in error, "❌ 'status' or 'message' key missing in 'error' object"
-
-    assert error["status"] == expected_status, (
-        f"❌ Error status mismatch. Expected: {expected_status}, Got: {error['status']}"
-    )
-
-    if expected_message_substring:
-        assert expected_message_substring.lower() in error["message"].lower(), (
-            f"❌ Error message does not contain expected text. "
-            f"Expected to include: '{expected_message_substring}', Got: '{error['message']}'"
-        )
+#
+# def assert_error_response(response, expected_status: int, expected_message_substring: str = ""):
+#     assert response.status_code == expected_status, (
+#         f"❌ Expected status {expected_status}, got {response.status_code}. Response: {response.text}"
+#     )
+#
+#     body = response.json()
+#     assert "error" in body, "❌ 'error' object missing in response"
+#
+#     error = body["error"]
+#     assert "status" in error and "message" in error, "❌ 'status' or 'message' key missing in 'error' object"
+#
+#     assert error["status"] == expected_status, (
+#         f"❌ Error status mismatch. Expected: {expected_status}, Got: {error['status']}"
+#     )
+#
+#     if expected_message_substring:
+#         assert expected_message_substring.lower() in error["message"].lower(), (
+#             f"❌ Error message does not contain expected text. "
+#             f"Expected to include: '{expected_message_substring}', Got: '{error['message']}'"
+#         )
 
 
 def assert_token_is_valid(token: str):
     assert isinstance(token, str), "❌ Token must be a string"
     assert len(token) > 10, f"❌ Token is too short: {len(token)} chars"
+
+
+def assert_error_response(
+        response,
+        expected_status: int = None,
+        expected_status_codes: list[int] = None,
+        expected_message_substring: str = ""
+):
+    """
+    Assert that an error response matches expected status and optional message.
+    Either `expected_status` or `expected_status_codes` must be provided.
+    """
+
+    # Determine which status codes to expect
+    if expected_status is not None:
+        expected_status_codes = [expected_status]
+    elif expected_status_codes is None:
+        expected_status_codes = [400, 401, 403, 404, 422]  # default safe fallback
+
+    assert response.status_code in expected_status_codes, (
+        f"❌ Expected status in {expected_status_codes}, got {response.status_code}. Response: {response.text}"
+    )
+
+    try:
+        body = response.json()
+    except ValueError:
+        raise AssertionError("❌ Response is not valid JSON")
+
+    assert "error" in body, "❌ 'error' object missing in response"
+
+    error = body["error"]
+    assert "status" in error and "message" in error, "❌ 'status' or 'message' key missing in 'error' object"
+
+    if expected_status is not None:
+        assert error["status"] == expected_status, (
+            f"❌ Error status mismatch. Expected: {expected_status}, Got: {error['status']}"
+        )
+
+    if expected_message_substring:
+        assert expected_message_substring.lower() in error["message"].lower(), (
+            f"❌ Error message mismatch.\nExpected to include: '{expected_message_substring}'\n"
+            f"Actual message: '{error['message']}'"
+        )
