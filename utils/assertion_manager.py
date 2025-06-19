@@ -1,3 +1,5 @@
+from pydantic import ValidationError, BaseModel
+
 from infra.models.playlist_response import PlaylistTrackResponse, PlaylistItem
 from tests.constants.playlist_constants import EXPECTED_KEYS_GET_PLAYLIST_ITEMS
 
@@ -133,6 +135,7 @@ def assert_error_response(
                 f"Got: '{desc}'"
             )
 
+
 def assert_playlist_items_response_keys_exist(response):
     response_json = response.json()
     assert_keys_exist(response_json, EXPECTED_KEYS_GET_PLAYLIST_ITEMS)
@@ -170,3 +173,16 @@ def assert_playlist_items_schema(response):
             PlaylistItem(**item)
         except Exception as e:
             raise AssertionError(f"❌ Invalid playlist item at index {idx}: {e}")
+
+
+def assert_response_schema(response: dict, schema_model: type[BaseModel], context: str = ""):
+    """
+    Validate that a response matches the expected schema.
+    Raises an assertion error if validation fails.
+    """
+    try:
+        schema_model.parse_obj(response)
+    except ValidationError as e:
+        raise AssertionError(
+            f"❌ Schema validation failed{f' in {context}' if context else ''}:\n{e}"
+        )
