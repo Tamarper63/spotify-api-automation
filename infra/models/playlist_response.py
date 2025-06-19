@@ -56,3 +56,8 @@ class PlaylistTrackResponse(BaseModel):
     offset: Optional[int]
     previous: Optional[str]
     total: int
+
+
+class PlaylistItem(BaseModel):
+    added_at: str
+    track: dict

@@ -1,16 +1,14 @@
 import os
-from dotenv import load_dotenv
-
-load_dotenv()
 
 
 class ConfigManager:
+
     @staticmethod
-    def get_client_id() -> str:
+    def get_client_id():
         return os.getenv("SPOTIFY_CLIENT_ID")
 
     @staticmethod
-    def get_client_secret() -> str:
+    def get_client_secret():
         return os.getenv("SPOTIFY_CLIENT_SECRET")
 
     @staticmethod
