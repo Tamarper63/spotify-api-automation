@@ -59,29 +59,6 @@ def assert_nested_field_equals(response_json: dict, field_path: str, expected_va
     )
 
 
-#
-# def assert_error_response(response, expected_status: int, expected_message_substring: str = ""):
-#     assert response.status_code == expected_status, (
-#         f"❌ Expected status {expected_status}, got {response.status_code}. Response: {response.text}"
-#     )
-#
-#     body = response.json()
-#     assert "error" in body, "❌ 'error' object missing in response"
-#
-#     error = body["error"]
-#     assert "status" in error and "message" in error, "❌ 'status' or 'message' key missing in 'error' object"
-#
-#     assert error["status"] == expected_status, (
-#         f"❌ Error status mismatch. Expected: {expected_status}, Got: {error['status']}"
-#     )
-#
-#     if expected_message_substring:
-#         assert expected_message_substring.lower() in error["message"].lower(), (
-#             f"❌ Error message does not contain expected text. "
-#             f"Expected to include: '{expected_message_substring}', Got: '{error['message']}'"
-#         )
-
-
 def assert_token_is_valid(token: str):
     assert isinstance(token, str), "❌ Token must be a string"
     assert len(token) > 10, f"❌ Token is too short: {len(token)} chars"
