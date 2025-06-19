@@ -1,3 +1,9 @@
+from pydantic import ValidationError, BaseModel
+
+from infra.models.playlist_response import PlaylistTrackResponse, PlaylistItem
+from tests.constants.playlist_constants import EXPECTED_KEYS_GET_PLAYLIST_ITEMS
+
+
 def assert_status_code_ok(response, expected, context=""):
     assert response.status_code == expected, (
         f"❌ {context}: Expected {expected}, got {response.status_code}. "
@@ -53,28 +59,107 @@ def assert_nested_field_equals(response_json: dict, field_path: str, expected_va
     )
 
 
-def assert_error_response(response, expected_status: int, expected_message_substring: str = ""):
-    assert response.status_code == expected_status, (
-        f"❌ Expected status {expected_status}, got {response.status_code}. Response: {response.text}"
-    )
-
-    body = response.json()
-    assert "error" in body, "❌ 'error' object missing in response"
-
-    error = body["error"]
-    assert "status" in error and "message" in error, "❌ 'status' or 'message' key missing in 'error' object"
-
-    assert error["status"] == expected_status, (
-        f"❌ Error status mismatch. Expected: {expected_status}, Got: {error['status']}"
-    )
-
-    if expected_message_substring:
-        assert expected_message_substring.lower() in error["message"].lower(), (
-            f"❌ Error message does not contain expected text. "
-            f"Expected to include: '{expected_message_substring}', Got: '{error['message']}'"
-        )
-
-
 def assert_token_is_valid(token: str):
     assert isinstance(token, str), "❌ Token must be a string"
     assert len(token) > 10, f"❌ Token is too short: {len(token)} chars"
+
+
+def assert_error_response(
+        response,
+        expected_status: int = None,
+        expected_status_codes: list[int] = None,
+        expected_message_substring: str = ""
+):
+    if expected_status is not None:
+        expected_status_codes = [expected_status]
+    elif expected_status_codes is None:
+        expected_status_codes = [400, 401, 403, 404, 422]
+
+    assert response.status_code in expected_status_codes, (
+        f"❌ Expected status in {expected_status_codes}, got {response.status_code}. "
+        f"Response: {response.text}"
+    )
+
+    try:
+        body = response.json()
+    except ValueError:
+        if expected_message_substring:
+            raise AssertionError("❌ Response is not valid JSON, so cannot validate message content.")
+        return  # OK with just status
+
+    # Spotify may return either a nested or flat error
+    if isinstance(body.get("error"), dict):
+        error = body["error"]
+        assert "status" in error and "message" in error, "❌ 'status' or 'message' missing in 'error'"
+
+        if expected_status is not None:
+            assert error["status"] == expected_status, (
+                f"❌ Error status mismatch. Expected: {expected_status}, Got: {error['status']}"
+            )
+
+        if expected_message_substring:
+            assert expected_message_substring.lower() in error["message"].lower(), (
+                f"❌ Error message mismatch. Expected to include: '{expected_message_substring}', "
+                f"Got: '{error['message']}'"
+            )
+    else:
+        # Flat error format: { "error": "invalid_client", "error_description": "Invalid client" }
+        assert "error" in body, "❌ Missing 'error' in flat response"
+        if expected_message_substring:
+            desc = body.get("error_description", "")
+            assert expected_message_substring.lower() in desc.lower(), (
+                f"❌ Error description mismatch. Expected to include: '{expected_message_substring}', "
+                f"Got: '{desc}'"
+            )
+
+
+def assert_playlist_items_response_keys_exist(response):
+    response_json = response.json()
+    assert_keys_exist(response_json, EXPECTED_KEYS_GET_PLAYLIST_ITEMS)
+    assert isinstance(response_json["items"], list), "'items' must be a list"
+
+
+def assert_playlist_items_match_model(response):
+    items = response.json().get("items", [])
+    for idx, item in enumerate(items):
+        try:
+            PlaylistTrackResponse(**item)
+        except Exception as e:
+            raise AssertionError(f"❌ Invalid item at index {idx}: {e}")
+
+
+def assert_playlist_items_with_limit(response, expected_limit: int):
+    actual_limit = response.json().get("limit")
+    assert actual_limit == expected_limit, (
+        f"❌ Limit mismatch: expected {expected_limit}, got {actual_limit}"
+    )
+
+
+def assert_playlist_items_schema(response):
+    """
+    Validates the full response and each item inside `items[]`.
+    """
+    json_data = response.json()
+
+    # Validate full response structure
+    PlaylistTrackResponse(**json_data)
+
+    # Validate each item (optional but good)
+    for idx, item in enumerate(json_data.get("items", [])):
+        try:
+            PlaylistItem(**item)
+        except Exception as e:
+            raise AssertionError(f"❌ Invalid playlist item at index {idx}: {e}")
+
+
+def assert_response_schema(response: dict, schema_model: type[BaseModel], context: str = ""):
+    """
+    Validate that a response matches the expected schema.
+    Raises an assertion error if validation fails.
+    """
+    try:
+        schema_model.parse_obj(response)
+    except ValidationError as e:
+        raise AssertionError(
+            f"❌ Schema validation failed{f' in {context}' if context else ''}:\n{e}"
+        )

@@ -1,0 +1,12 @@
+invalid_credentials:
+  client_id: "invalid_id"
+  client_secret: "invalid_secret"
+  expected_status: 400
+  expected_error_substring: "invalid client"
+
+missing_env:
+  client_id: null
+  client_secret: null
+  expect_raise: true
+  expected_exception: "ValueError"
+  match_message: "Missing required credentials"

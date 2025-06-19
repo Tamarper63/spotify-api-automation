@@ -27,7 +27,7 @@ def test_add_invalid_track_to_playlist(user_api_clients, invalid_track_uri, vali
         playlist_id=valid_playlist_id,
         uris=[invalid_track_uri]
     )
-    assert response.status_code in [400, 403, 404]
+    assert_error_response(response, expected_status_codes=[400, 403, 404])
 
 
 @pytest.mark.negative
@@ -36,18 +36,13 @@ def test_add_tracks_with_empty_uri_list(user_api_clients, valid_playlist_id):
         playlist_id=valid_playlist_id,
         uris=[]
     )
-    assert response.status_code in [400, 422]
+    assert_error_response(response, expected_status_codes=[400, 422])
 
 
 @pytest.mark.negative
-def test_add_tracks_without_auth(valid_track_uri, valid_playlist_id):
-    from infra.http.request_handler import RequestHandler
-    from infra.api_clients.playlist_client import PlaylistClient
-
-    handler = RequestHandler(token="")
-    client = PlaylistClient(handler)
-    response = client.add_tracks_to_playlist(
+def test_add_tracks_without_auth(unauthenticated_playlist_client, valid_track_uri, valid_playlist_id):
+    response = unauthenticated_playlist_client.add_tracks_to_playlist(
         playlist_id=valid_playlist_id,
         uris=[valid_track_uri]
     )
-    assert_error_response(response, 400)
+    assert_error_response(response, expected_status=400)

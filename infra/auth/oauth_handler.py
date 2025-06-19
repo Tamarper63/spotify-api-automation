@@ -25,8 +25,6 @@ class OAuthHandler:
         }
 
         url = f"{self.AUTH_URL}?{urllib.parse.urlencode(params)}"
-        print("👉 Open this URL in browser and login:")
-        print(url)
         webbrowser.open(url)
         auth_code = input("🔐 Paste the redirected code here: ").strip()
 

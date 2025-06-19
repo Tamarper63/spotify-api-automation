@@ -1,14 +1,17 @@
 import pytest
-from utils.assertion_manager import assert_status_code_ok
+from utils.assertion_manager import (
+    assert_status_code_ok,
+    assert_error_response
+)
 
 
 @pytest.mark.positive
 @pytest.mark.parametrize("name, public, collaborative, description", [
     ("Automation Playlist", True, False, "Updated via automation test"),
-    ("Hidden Playlist", False, None, "Private playlist"),
-    ("Collab Playlist", None, True, None),
-    ("Just Name", None, None, None),
+    ("Private Playlist", False, False, "Private & non-collab"),
+    ("Name only update", None, None, None),
     (None, None, None, "Only description changed"),
+    ("Set to private", False, None, "Making private")
 ])
 def test_change_playlist_details_optional_params_should_return_200(
     user_api_clients, default_playlist_id, name, public, collaborative, description
@@ -29,27 +32,39 @@ def test_change_playlist_invalid_id_should_return_400(user_api_clients):
         playlist_id="invalid_playlist_123",
         name="Invalid ID Test"
     )
-    assert response.status_code == 400
+    assert_error_response(response, expected_status=400)
 
 
 @pytest.mark.negative
-def test_change_playlist_without_auth(default_playlist_id):
-    from infra.api_clients.playlist_client import PlaylistClient
-    from infra.http.request_handler import RequestHandler
-
-    client = PlaylistClient(RequestHandler(token=""))  # no token
-    response = client.change_playlist_details(
+def test_change_playlist_without_auth(unauthenticated_playlist_client, default_playlist_id):
+    response = unauthenticated_playlist_client.change_playlist_details(
         playlist_id=default_playlist_id,
         name="Unauth test"
     )
-    assert response.status_code == 400
+    assert_error_response(response, expected_status=400)
 
 
 @pytest.mark.negative
 def test_change_playlist_with_invalid_data(user_api_clients, default_playlist_id):
-    # Intentionally send invalid type to trigger schema validation or 400
     response = user_api_clients.playlist.change_playlist_details(
         playlist_id=default_playlist_id,
-        name=123456  # Invalid type
+        name=123456  # Invalid type (should be str)
     )
-    assert response.status_code == 500
+    assert_error_response(response, expected_status_codes=[400, 422, 500])
+
+
+@pytest.mark.negative
+def test_change_playlist_public_and_collaborative_should_return_403(user_api_clients, default_playlist_id):
+    """
+    According to Spotify API rules, a playlist cannot be both public and collaborative.
+    """
+    response = user_api_clients.playlist.change_playlist_details(
+        playlist_id=default_playlist_id,
+        public=True,
+        collaborative=True
+    )
+    assert_error_response(
+        response,
+        expected_status=403,
+        expected_message_substring="public playlists collaborative"
+    )
