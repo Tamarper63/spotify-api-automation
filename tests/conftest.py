@@ -9,11 +9,11 @@ from infra.api_clients.user_client import UserClient
 from infra.auth.token_manager import TokenManager
 from infra.http.request_handler import RequestHandler
 
-load_dotenv()
+import os
+from dotenv import load_dotenv
 
-# =======================
-# Fixtures
-# =======================
+load_dotenv(override=True)
+
 
 @pytest.fixture
 def valid_playlist_id() -> str:
@@ -74,6 +74,7 @@ def api_clients(request_handler):
         auth = AuthClient()
         playlist = PlaylistClient(request_handler)
         user = UserClient(request_handler)
+
     return Clients()
 
 
@@ -82,6 +83,7 @@ def user_api_clients(user_request_handler):
     class Clients:
         playlist = PlaylistClient(user_request_handler)
         user = UserClient(user_request_handler)
+
     return Clients()
 
 

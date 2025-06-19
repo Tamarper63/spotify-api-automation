@@ -4,8 +4,6 @@ import requests
 from dotenv import load_dotenv
 from infra.http.config_manager import ConfigManager
 
-load_dotenv()
-
 
 class AuthClient:
     def __init__(self):
@@ -13,7 +11,10 @@ class AuthClient:
         self.client_secret = ConfigManager.get_client_secret()
         self.token_url = "https://accounts.spotify.com/api/token"
 
-    def get_token_response(self) -> dict:
+        if not self.client_id or not self.client_secret:
+            raise ValueError("Missing required credentials")
+
+    def get_token_response(self, raw: bool = False):
         auth_str = f"{self.client_id}:{self.client_secret}"
         auth_header = base64.b64encode(auth_str.encode()).decode()
 
@@ -27,5 +28,8 @@ class AuthClient:
         }
 
         response = requests.post(self.token_url, headers=headers, data=data)
-        response.raise_for_status()
+
+        if raw:
+            return response
+
         return response.json()

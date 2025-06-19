@@ -47,3 +47,12 @@ EXPECTED_KEYS_GET_PLAYLIST_ITEMS = [
 ]
 
 PLAYLIST_ITEMS_OPTIONAL_PARAMS_FILE = "playlist_items_params.yaml"
+
+UNAUTHORIZED = 401
+BAD_REQUEST = 400
+
+ERROR_MSGS = {
+    "invalid_client": "invalid client",
+    "missing_auth": "authorization",
+    "missing_credentials": "Missing required credentials",
+}

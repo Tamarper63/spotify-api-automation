@@ -91,12 +91,6 @@ def assert_error_response(
         expected_status_codes: list[int] = None,
         expected_message_substring: str = ""
 ):
-    """
-    Assert that an error response matches expected status and optional message.
-    Handles cases where response body is not valid JSON.
-    """
-
-    # Determine status
     if expected_status is not None:
         expected_status_codes = [expected_status]
     elif expected_status_codes is None:
@@ -112,25 +106,32 @@ def assert_error_response(
     except ValueError:
         if expected_message_substring:
             raise AssertionError("❌ Response is not valid JSON, so cannot validate message content.")
-        return  # status is enough
+        return  # OK with just status
 
-    # JSON content expected now
-    assert "error" in body, "❌ 'error' object missing in response"
-    error = body["error"]
+    # Spotify may return either a nested or flat error
+    if isinstance(body.get("error"), dict):
+        error = body["error"]
+        assert "status" in error and "message" in error, "❌ 'status' or 'message' missing in 'error'"
 
-    assert "status" in error and "message" in error, "❌ 'status' or 'message' missing in 'error'"
+        if expected_status is not None:
+            assert error["status"] == expected_status, (
+                f"❌ Error status mismatch. Expected: {expected_status}, Got: {error['status']}"
+            )
 
-    if expected_status is not None:
-        assert error["status"] == expected_status, (
-            f"❌ Error status mismatch. Expected: {expected_status}, Got: {error['status']}"
-        )
-
-    if expected_message_substring:
-        assert expected_message_substring.lower() in error["message"].lower(), (
-            f"❌ Error message mismatch. Expected to include: '{expected_message_substring}', "
-            f"Got: '{error['message']}'"
-        )
-
+        if expected_message_substring:
+            assert expected_message_substring.lower() in error["message"].lower(), (
+                f"❌ Error message mismatch. Expected to include: '{expected_message_substring}', "
+                f"Got: '{error['message']}'"
+            )
+    else:
+        # Flat error format: { "error": "invalid_client", "error_description": "Invalid client" }
+        assert "error" in body, "❌ Missing 'error' in flat response"
+        if expected_message_substring:
+            desc = body.get("error_description", "")
+            assert expected_message_substring.lower() in desc.lower(), (
+                f"❌ Error description mismatch. Expected to include: '{expected_message_substring}', "
+                f"Got: '{desc}'"
+            )
 
 def assert_playlist_items_response_keys_exist(response):
     response_json = response.json()
