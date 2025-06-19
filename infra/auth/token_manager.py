@@ -29,6 +29,7 @@ def update_dotenv(key: str, value: str):
     with open(env_path, "w") as f:
         f.writelines(lines)
 
+
 class TokenManager:
     _token = None
     _expires_at = 0
@@ -71,5 +72,3 @@ class TokenManager:
                 update_dotenv("SPOTIFY_USER_EXPIRES_AT", str(expires_at))
 
         return access_token
-
-
