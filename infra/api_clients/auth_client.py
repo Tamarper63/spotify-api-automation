@@ -1,19 +1,20 @@
 import base64
 
 import requests
-from dotenv import load_dotenv
-
-from infra.config.config_manager import ConfigManager
+from pydantic import ValidationError
+from infra.config.settings import get_settings
 
 
 class AuthClient:
     def __init__(self):
-        self.client_id = ConfigManager.get_client_id()
-        self.client_secret = ConfigManager.get_client_secret()
-        self.token_url = "https://accounts.spotify.com/api/token"
+        try:
+            settings = get_settings()
+            self.client_id = settings.spotify_client_id
+            self.client_secret = settings.spotify_client_secret
+        except ValidationError as e:
+            raise ValueError("Missing required credentials") from e
 
-        if not self.client_id or not self.client_secret:
-            raise ValueError("Missing required credentials")
+        self.token_url = "https://accounts.spotify.com/api/token"
 
     def get_token_response(self, raw: bool = False):
         auth_str = f"{self.client_id}:{self.client_secret}"

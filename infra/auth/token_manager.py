@@ -11,9 +11,8 @@ def update_dotenv(key: str, value: str):
     lines = []
     found = False
 
-    # ✅ Ensure the file exists before reading
     if not env_path.exists():
-        env_path.touch()  # creates empty .env file
+        env_path.touch()
 
     with open(env_path, "r") as f:
         for line in f:
