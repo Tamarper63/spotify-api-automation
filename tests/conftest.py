@@ -113,3 +113,13 @@ def unauthenticated_playlist_client():
     from infra.api_clients.playlist_client import PlaylistClient
 
     return PlaylistClient(RequestHandler(token=""))
+
+
+@pytest.fixture
+def reorder_ready_playlist(user_api_clients, default_playlist_id, sample_uris):
+    """
+    Ensure the playlist has enough tracks to allow reordering.
+    """
+    user_api_clients.playlist.add_tracks_to_playlist(default_playlist_id, sample_uris)
+    return default_playlist_id
+

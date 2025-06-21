@@ -2,7 +2,8 @@ import base64
 
 import requests
 from dotenv import load_dotenv
-from infra.http.config_manager import ConfigManager
+
+from infra.config.config_manager import ConfigManager
 
 
 class AuthClient:
@@ -33,3 +34,7 @@ class AuthClient:
             return response
 
         return response.json()
+
+    @staticmethod
+    def post_token_request_raw(url: str, headers: dict, data: dict) -> requests.Response:
+        return requests.post(url, headers=headers, data=data)

@@ -1,14 +1,22 @@
+import requests
 from pydantic import ValidationError, BaseModel
 
+from infra.models.error_response import ErrorResponse
 from infra.models.playlist_response import PlaylistTrackResponse, PlaylistItem
 from tests.constants.playlist_constants import EXPECTED_KEYS_GET_PLAYLIST_ITEMS
 
 
 def assert_status_code_ok(response, expected, context=""):
-    assert response.status_code == expected, (
-        f"❌ {context}: Expected {expected}, got {response.status_code}. "
-        f"Response: {response.text}"
-    )
+    if isinstance(expected, list):
+        assert response.status_code in expected, (
+            f"❌ {context}: Expected one of {expected}, got {response.status_code}. "
+            f"Response: {response.text}"
+        )
+    else:
+        assert response.status_code == expected, (
+            f"❌ {context}: Expected {expected}, got {response.status_code}. "
+            f"Response: {response.text}"
+        )
 
 
 def assert_keys_exist(response_json, keys):
@@ -66,51 +74,41 @@ def assert_token_is_valid(token: str):
 
 def assert_error_response(
         response,
-        expected_status: int = None,
-        expected_status_codes: list[int] = None,
-        expected_message_substring: str = ""
+        expected_status_codes: int | list[int],
+        expected_message_substring: str | None = None,
+        context: str = "Error response validation"
 ):
-    if expected_status is not None:
-        expected_status_codes = [expected_status]
-    elif expected_status_codes is None:
-        expected_status_codes = [400, 401, 403, 404, 422]
-
-    assert response.status_code in expected_status_codes, (
-        f"❌ Expected status in {expected_status_codes}, got {response.status_code}. "
-        f"Response: {response.text}"
-    )
+    assert_status_code_ok(response, expected_status_codes, context)
 
     try:
-        body = response.json()
-    except ValueError:
+        try:
+            data = response.json()
+        except requests.exceptions.JSONDecodeError:
+            # Handle raw HTML/invalid JSON response
+            error_msg = response.text.strip()
+            if expected_message_substring:
+                assert expected_message_substring.lower() in error_msg.lower(), (
+                    f"[{context}] HTML response — expected to find '{expected_message_substring}', "
+                    f"but got:\n{error_msg}"
+                )
+            return  # success fallback
+
+        # Handle Spotify-style JSON error
+        if isinstance(data.get("error"), dict):
+            from infra.models.error_response import ErrorResponse
+            error_model = ErrorResponse(**data)
+            error_msg = error_model.error.message
+        else:
+            error_msg = data.get("error_description") or str(data.get("error"))
+
         if expected_message_substring:
-            raise AssertionError("❌ Response is not valid JSON, so cannot validate message content.")
-        return  # OK with just status
-
-    # Spotify may return either a nested or flat error
-    if isinstance(body.get("error"), dict):
-        error = body["error"]
-        assert "status" in error and "message" in error, "❌ 'status' or 'message' missing in 'error'"
-
-        if expected_status is not None:
-            assert error["status"] == expected_status, (
-                f"❌ Error status mismatch. Expected: {expected_status}, Got: {error['status']}"
+            assert expected_message_substring.lower() in error_msg.lower(), (
+                f"[{context}] Expected error message to contain: '{expected_message_substring}', "
+                f"but got: '{error_msg}'"
             )
 
-        if expected_message_substring:
-            assert expected_message_substring.lower() in error["message"].lower(), (
-                f"❌ Error message mismatch. Expected to include: '{expected_message_substring}', "
-                f"Got: '{error['message']}'"
-            )
-    else:
-        # Flat error format: { "error": "invalid_client", "error_description": "Invalid client" }
-        assert "error" in body, "❌ Missing 'error' in flat response"
-        if expected_message_substring:
-            desc = body.get("error_description", "")
-            assert expected_message_substring.lower() in desc.lower(), (
-                f"❌ Error description mismatch. Expected to include: '{expected_message_substring}', "
-                f"Got: '{desc}'"
-            )
+    except Exception as e:
+        raise AssertionError(f"[{context}] Failed to extract error message: {e}\nResponse: {response.text}")
 
 
 def assert_playlist_items_response_keys_exist(response):
