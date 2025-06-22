@@ -2,7 +2,6 @@ import requests
 import webbrowser
 import urllib.parse
 import base64
-import os
 
 
 class OAuthHandler:
