@@ -1,0 +1,5 @@
+DEFAULT_STATUS_OK = 200
+
+INVALID_CREDS_CONTEXT = "Invalid credentials"
+INVALID_URL_CONTEXT = "Invalid token URL"
+
