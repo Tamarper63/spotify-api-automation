@@ -4,7 +4,6 @@ from infra.http.request_handler import RequestHandler
 from infra.models.playlist_response import PlaylistResponse
 from utils.assertion_manager import (
     assert_status_code_ok,
-    assert_nested_field_equals,
     assert_keys_exist,
     assert_error_response,
 )
