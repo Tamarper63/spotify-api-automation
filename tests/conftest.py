@@ -4,7 +4,9 @@ import pytest
 from dotenv import load_dotenv
 
 from infra.api_clients.auth_client import AuthClient
+from infra.api_clients.brower_client import BrowseClient
 from infra.api_clients.playlist_client import PlaylistClient
+from infra.api_clients.search_client import SearchClient
 from infra.api_clients.user_client import UserClient
 from infra.auth.token_manager import TokenManager
 from infra.http.request_handler import RequestHandler
@@ -83,8 +85,18 @@ def user_api_clients(user_request_handler):
     class Clients:
         playlist = PlaylistClient(user_request_handler)
         user = UserClient(user_request_handler)
+        browse = BrowseClient(user_request_handler)
+        search = SearchClient(user_request_handler)
 
     return Clients()
+
+
+@pytest.fixture
+def isolated_test_playlist(user_api_clients, sample_uris):
+    playlist_id = user_api_clients.playlist.create_playlist(name="Test Playlist")["id"]
+    user_api_clients.playlist.add_tracks_to_playlist(playlist_id, sample_uris)
+    yield playlist_id
+    user_api_clients.playlist.unfollow_playlist(playlist_id)  # cleanup
 
 
 # =======================
@@ -92,7 +104,6 @@ def user_api_clients(user_request_handler):
 # =======================
 
 def pytest_runtest_logstart(nodeid, location):
-    # Initialize a log container per test node
     pytest.current_test_node = {"perf_logs": []}
 
 
@@ -103,7 +114,6 @@ def pytest_runtest_makereport(item, call):
     if report.when == "call":
         perf_logs = getattr(pytest, "current_test_node", {}).get("perf_logs", [])
         if perf_logs:
-            # Append all performance logs to HTML report under "API Requests"
             report.sections.append(("API Requests", "\n".join(perf_logs)))
 
 
@@ -122,4 +132,3 @@ def reorder_ready_playlist(user_api_clients, default_playlist_id, sample_uris):
     """
     user_api_clients.playlist.add_tracks_to_playlist(default_playlist_id, sample_uris)
     return default_playlist_id
-

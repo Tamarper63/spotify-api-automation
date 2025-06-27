@@ -12,10 +12,11 @@ class PlaylistClient:
             params["additional_types"] = additional_types
         return self.request_handler.get(f"/playlists/{playlist_id}", params=params or None)
 
-    def create_playlist(self, user_id: str, name: str, public=True, description=""):
+    def create_playlist(self, user_id: str, name: str, public=True, collaborative=False, description=""):
         payload = {
             "name": name,
             "public": public,
+            "collaborative": collaborative,
             "description": description
         }
         return self.request_handler.post(f"/users/{user_id}/playlists", json=payload)
@@ -32,7 +33,8 @@ class PlaylistClient:
         }
         return self.request_handler.delete_with_body(f"/playlists/{playlist_id}/tracks", json=payload)
 
-    def get_playlist_items(self, playlist_id: str, market: str = None, fields: str = None, limit: int = None, offset: int = None):
+    def get_playlist_items(self, playlist_id: str, market: str = None, fields: str = None, limit: int = None,
+                           offset: int = None):
         params = {}
         if market:
             params["market"] = market
@@ -64,7 +66,8 @@ class PlaylistClient:
 
         return self.request_handler.put(f"/playlists/{playlist_id}", json=payload)
 
-    def reorder_playlist_items(self, playlist_id: str, range_start: int, insert_before: int, range_length: int = 1, snapshot_id: str = None):
+    def reorder_playlist_items(self, playlist_id: str, range_start: int, insert_before: int, range_length: int = 1,
+                               snapshot_id: str = None):
         payload = {
             "range_start": range_start,
             "insert_before": insert_before,
@@ -100,4 +103,23 @@ class PlaylistClient:
     def upload_custom_playlist_cover_image(self, playlist_id: str, image_base64: str):
         headers = self.request_handler.headers.copy()
         headers["Content-Type"] = "image/jpeg"
-        return self.request_handler.put(f"/playlists/{playlist_id}/images", json=None, data=image_base64, custom_headers=headers)
+        return self.request_handler.put(f"/playlists/{playlist_id}/images", json=None, data=image_base64,
+                                        custom_headers=headers)
+
+    def follow_playlist(self, playlist_id: str, public: bool = True):
+        """
+        Follow a playlist as the current user.
+        'public' default True publishes to user profile; False makes it private.
+        """
+        return self.request_handler.put(
+            f"/playlists/{playlist_id}/followers",
+            json={"public": public},
+        )
+
+    def unfollow_playlist(self, playlist_id: str):
+        """
+        Unfollow a playlist as the current user.
+        """
+        return self.request_handler.delete(
+            f"/playlists/{playlist_id}/followers"
+        )
