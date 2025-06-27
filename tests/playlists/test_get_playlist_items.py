@@ -9,7 +9,7 @@ from utils.assertion_manager import (
 @pytest.mark.positive
 @pytest.mark.parametrize("limit", [5, 10])
 def test_get_playlist_items_limit_match_response(user_api_clients, default_playlist_id, limit):
-    response = user_api_clients.playlist.get_playlist_items(
+    response = user_api_clients.spotify.get_playlist_items(
         playlist_id=default_playlist_id,
         limit=limit
     )
@@ -21,7 +21,7 @@ def test_get_playlist_items_limit_match_response(user_api_clients, default_playl
 
 @pytest.mark.positive
 def test_get_playlist_items_with_offset(user_api_clients, default_playlist_id):
-    response = user_api_clients.playlist.get_playlist_items(
+    response = user_api_clients.spotify.get_playlist_items(
         playlist_id=default_playlist_id,
         limit=1,
         offset=1
@@ -33,7 +33,7 @@ def test_get_playlist_items_with_offset(user_api_clients, default_playlist_id):
 @pytest.mark.negative
 @pytest.mark.parametrize("invalid_id", ["invalid_id", "123", "!!!"])
 def test_get_playlist_items_with_invalid_id_should_return_400(user_api_clients, invalid_id):
-    response = user_api_clients.playlist.get_playlist_items(playlist_id=invalid_id)
+    response = user_api_clients.spotify.get_playlist_items(playlist_id=invalid_id)
     assert_error_response(
         response,
         expected_status_codes=400,
@@ -43,7 +43,7 @@ def test_get_playlist_items_with_invalid_id_should_return_400(user_api_clients, 
 
 @pytest.mark.negative
 def test_get_playlist_items_with_invalid_limit_should_return_400(user_api_clients, default_playlist_id):
-    response = user_api_clients.playlist.get_playlist_items(
+    response = user_api_clients.spotify.get_playlist_items(
         playlist_id=default_playlist_id,
         limit=-5
     )

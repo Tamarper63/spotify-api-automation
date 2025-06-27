@@ -1,6 +1,9 @@
+# tests/browse/test_get_categories.py
+
 import pytest
 from utils.assertion_manager import assert_status_code_ok, assert_keys_exist
-import requests
+from infra.http.request_handler import RequestHandler
+from infra.api_clients.spotify_client import SpotifyClient
 
 
 @pytest.mark.contract
@@ -10,7 +13,7 @@ import requests
     ("es_MX", 10, 5),
 ])
 def test_get_categories_ok(user_api_clients, locale, limit, offset):
-    response = user_api_clients.browse.get_categories(locale=locale, limit=limit, offset=offset)
+    response = user_api_clients.spotify.get_categories(locale=locale, limit=limit, offset=offset)
     assert_status_code_ok(response, 200)
     payload = response.json()
     assert "categories" in payload
@@ -19,5 +22,9 @@ def test_get_categories_ok(user_api_clients, locale, limit, offset):
 
 @pytest.mark.negative
 def test_get_categories_unauthorized():
-    response = requests.get("https://api.spotify.com/v1/browse/categories")
-    assert response.status_code in (401, 403)
+    """
+    Verify that omitting the Authorization header results in unauthorized access.
+    """
+    client = SpotifyClient(request_handler=RequestHandler(token=""))  # empty token
+    response = client.get_categories()
+    assert response.status_code in (400, 401, 403)

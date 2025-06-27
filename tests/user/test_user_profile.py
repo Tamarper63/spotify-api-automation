@@ -10,7 +10,7 @@ from utils.assertion_manager import (
 
 @pytest.mark.contract
 def test_user_profile_model_schema(user_api_clients):
-    response = user_api_clients.user.get_current_user_profile()
+    response = user_api_clients.spotify.get_current_user_profile()
     assert_status_code_ok(response, 200)
 
     UserProfileResponse(**response.json())
@@ -19,7 +19,7 @@ def test_user_profile_model_schema(user_api_clients):
 @pytest.mark.smoke
 @pytest.mark.positive
 def test_get_current_user_profile_should_return_200(user_api_clients):
-    response = user_api_clients.user.get_current_user_profile()
+    response = user_api_clients.spotify.get_current_user_profile()
 
     assert_status_code_ok(response, 200, "Get current user profile")
     expected_keys = ["id", "display_name", "uri", "external_urls", "type"]
@@ -45,7 +45,7 @@ def test_get_user_profile_with_invalid_token_should_return_401():
 
 @pytest.mark.negative
 def test_user_profile_should_not_include_email_if_scope_missing(user_api_clients):
-    response = user_api_clients.user.get_current_user_profile()
+    response = user_api_clients.spotify.get_current_user_profile()
     data = response.json()
     assert "email" not in data
 
@@ -62,7 +62,7 @@ OPTIONAL_FIELDS = [
 @pytest.mark.positive
 @pytest.mark.parametrize("field, validator", OPTIONAL_FIELDS)
 def test_user_profile_optional_field_behavior(user_api_clients, field, validator):
-    response = user_api_clients.user.get_current_user_profile()
+    response = user_api_clients.spotify.get_current_user_profile()
     assert_status_code_ok(response, 200, f"Optional field: {field}")
 
     json_data = response.json()

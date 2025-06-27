@@ -11,9 +11,9 @@ def test_remove_existing_tracks_should_return_200(user_api_clients, default_play
     Preconditions: Ensure tracks exist in the playlist.
     Then: Remove the tracks and assert success.
     """
-    ensure_tracks_exist_in_playlist(user_api_clients, default_playlist_id, sample_uris)
+    ensure_tracks_exist_in_playlist(user_api_clients.spotify, default_playlist_id, sample_uris)
 
-    response = user_api_clients.playlist.remove_tracks_from_playlist(
+    response = user_api_clients.spotify.remove_tracks_from_playlist(
         playlist_id=default_playlist_id,
         uris=sample_uris
     )
@@ -41,7 +41,7 @@ def test_remove_tracks_with_invalid_uri_should_return_400(user_api_clients, defa
     """
     Attempt to remove a track using an invalid URI format.
     """
-    response = user_api_clients.playlist.remove_tracks_from_playlist(
+    response = user_api_clients.spotify.remove_tracks_from_playlist(
         playlist_id=default_playlist_id,
         uris=[invalid_track_uri]
     )

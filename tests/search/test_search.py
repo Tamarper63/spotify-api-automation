@@ -11,8 +11,8 @@ from utils.assertion_manager import assert_status_code_ok, assert_keys_exist
     ("Nirvana", ["artist", "track"]),
 ])
 def test_search_various_types_ok(user_api_clients, q, types):
-    response = user_api_clients.search.search(
-        q=q,
+    response = user_api_clients.spotify.search(
+        query=q,
         types=types,
         market="US",
         limit=5,
@@ -29,7 +29,7 @@ def test_search_various_types_ok(user_api_clients, q, types):
 
 @pytest.mark.negative
 def test_search_missing_q(user_api_clients):
-    response = user_api_clients.search.search(q="", types=["track"])
+    response = user_api_clients.spotify.search(query="", types=["track"])
     assert response.status_code == 400
 
 
