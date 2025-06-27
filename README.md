@@ -1,31 +1,42 @@
-# 🎧 Spotify API Automation Framework
+# Spotify API Automation
 
-A robust and scalable **API automation framework** for the [Spotify Web API](https://developer.spotify.com/documentation/web-api/), built in **Python** with **Pytest**, following modern best practices: **SOLID principles**, strict typing, modular design, and schema validation using **Pydantic**.
+Automation suite for Spotify Web API with unified client architecture, structured test layers, and strict modular conventions.
 
 ---
 
-## 📁 Project Structure
+## ✅ Overview
 
-spotify-api-automation/
-│
-├── infra/
-│ ├── auth/ # Token manager, authentication handling
-│ ├── api_clients/ # Client classes for Spotify endpoints
-│ └── models/ # Pydantic schema models for API responses
-│
-├── tests/
-│ ├── auth/ # Token-related tests
-│ ├── playlists/ # Playlist endpoint tests
-│ └── data/ # YAML parameterized test data
-│
-├── utils/
-│ ├── assertion_manager.py # Centralized reusable assertions
-│ ├── schema_validator.py # Schema validation logic
-│
-├── conftest.py # Centralized fixtures (clients, tokens, configs)
-├── requirements.txt
-├── pytest.ini
-└── README.md
+- 🧱 Architecture: Layered (Config, HTTP, Client, Models, Tests, Utils)
+- 🧪 Test Framework: `pytest` with custom markers and assertion manager
+- 🔐 Auth Support: Client Credentials + User Token via `TokenManager`
+- 🧵 Unified API Client: `SpotifyClient` handles all endpoints (auth, playlist, user, search, browse)
+- 📊 Schema validation via `pydantic` models
+- 💡 Coverage: Playlists, Tracks, Search, Browse, User Profile
+
+---
+
+## 📂 Project Structure
+
+infra/
+├── api_clients/
+│ └── spotify_client.py # Unified SpotifyClient
+├── auth/token_manager.py # Token flows
+├── config/settings.py # .env + secrets
+├── http/
+│ ├── request_sender.py # Low-level HTTP
+│ └── request_handler.py # Injected wrapper
+├── models/ # Pydantic models
+tests/
+├── playlists/
+├── search/
+├── user/
+├── browse/
+├── auth/
+└── conftest.py # Fixtures
+utils/
+├── assertion_manager.py
+├── image_utils.py
+└── yaml_loader.py
 
 yaml
 Copy
@@ -33,96 +44,51 @@ Edit
 
 ---
 
-## ✅ Example: Token API Tests
+## 🧪 Test Capabilities
 
-### `tests/auth/test_token.py`
+- ✅ Positive / contract / smoke tests
+- ❌ Negative / unauthorized / invalid param validations
+- ✅ End-to-end lifecycle validation (`test_playlist_flow.py`)
+- ✅ YAML-based parametric testing (pagination, limit-offset)
+- ✅ Model schema assertion with `assert_response_schema(...)`
 
-Test coverage includes:
+---
 
-| Test Type        | Description                                                |
-|------------------|------------------------------------------------------------|
-| ✅ Positive       | Validate token creation with valid credentials             |
-| ❌ Negative       | Invalid/missing credentials, headers, malformed grant types |
-| 🧪 Schema         | Full response validation against strict `TokenResponse` model |
+## 🔐 Auth Token Flow
 
 ```python
-@pytest.mark.positive
-def test_token_success_with_valid_credentials():
-    client = AuthClient()
-    full_response = client.get_token_response()
+# Token generation
+from infra.auth.token_manager import TokenManager
 
-    assert_response_schema(full_response, TokenResponse, context="Smoke test: Get token")
-    assert_token_is_valid(full_response["access_token"])
-🧠 Framework Features
-✅ Pytest with tags: @positive, @negative, @smoke, etc.
+client_token = TokenManager.get_token()
+user_token = TokenManager.get_user_token()
+All requests are routed via RequestHandler(token).
 
-✅ Pydantic for strict schema models
-
-✅ Environment-safe using python-dotenv
-
-✅ SOLID test design: no logic inside test bodies
-
-✅ Reusable validation via AssertionManager
-
-✅ YAML-ready for future data-driven test expansion
-
-
-🔐 Environment Variables
-Add a .env file in the root:
-
-dotenv
-Copy
-Edit
-SPOTIFY_CLIENT_ID=your_client_id
-SPOTIFY_CLIENT_SECRET=your_client_secret
-These are accessed by ConfigManager via load_dotenv().
-
-🚀 How to Run
-1. Install dependencies
+🚀 Run Tests
 bash
 Copy
 Edit
-pip install -r requirements.txt
-2. Run all tests
-bash
-Copy
-Edit
-pytest -v
-3. Generate HTML report
-bash
-Copy
-Edit
-pytest --html=report.html --self-contained-html
-📦 Models Example
-infra/models/token_response.py
+# Basic run
+pytest
 
+# Filter by marker
+pytest -m "positive"
+pytest -m "contract"
+
+# Generate HTML report
+pytest --html=reports/html/report.html --self-contained-html
+🧭 Usage Example
 python
 Copy
 Edit
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str
-    expires_in: int
-👨‍🔬 Assertions Example
-utils/assertion_manager.py
+client = SpotifyClient(request_handler)
 
-python
-Copy
-Edit
-def assert_token_is_valid(token: str):
-    assert isinstance(token, str), "Token should be a string"
-    assert len(token) > 20, "Token seems unexpectedly short"
-🧪 Test Tags & Strategy
-@pytest.mark.positive: expected successful flow
+# Playlist
+client.get_playlist("playlist_id")
+client.add_tracks_to_playlist("playlist_id", ["spotify:track:..."])
 
-@pytest.mark.negative: validation and failure handling
+# Search
+client.search(query="Nirvana", types=["track"])
 
-@pytest.mark.contract: response structure and type checks
-
-@pytest.mark.smoke: essential flows to validate availability
-
-👩‍💻 Author
-Tamar Peretz
-Senior Infrastructure & API Automation Engineer
-Maintaining this repo as a real-world example of best practices for API test architecture.
-
+# User
+client.get_current_user_profile()

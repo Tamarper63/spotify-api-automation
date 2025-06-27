@@ -1,18 +1,42 @@
-# spotify_client.py – Unified Client
+# spotify_client.py – Unified Client for Spotify Web API
+
 import base64
+import time
 from pydantic_core import ValidationError
 from infra.http.request_sender import _send_request
 from infra.config.settings import get_settings
+from utils.log_utils import log_api_call
 
 
 class SpotifyClient:
+    """
+    Unified Spotify API Client.
+    All endpoint operations are encapsulated in a single interface,
+    split by domain (token/user/playlist/search/browse).
+    """
+
     def __init__(self, request_handler=None, client_id: str = None, client_secret: str = None):
         self.request_handler = request_handler
         settings = get_settings()
-
         self.client_id = client_id or settings.spotify_client_id
         self.client_secret = client_secret or settings.spotify_client_secret
         self.token_url = "https://accounts.spotify.com/api/token"
+
+    def _log_and_call(self, method: str, url: str, *, http_method: str, **kwargs):
+        start = time.perf_counter()
+        response = getattr(self.request_handler, http_method)(url, **kwargs)
+        elapsed = int((time.perf_counter() - start) * 1000)
+        try:
+            log_api_call(
+                method=method,
+                url=url,
+                status_code=response.status_code,
+                elapsed_ms=elapsed,
+                response_body=response.json() if hasattr(response, "json") else None
+            )
+        except Exception:
+            pass
+        return response
 
     # ===========================
     # Token Handling
@@ -35,14 +59,14 @@ class SpotifyClient:
     # ===========================
 
     def get_current_user_profile(self):
-        return self.request_handler.get("/me")
+        return self._log_and_call("get_current_user_profile", "/me", http_method="get")
 
     # ===========================
     # Playlist
     # ===========================
 
     def create_playlist(self, user_id: str, name: str, public=True, collaborative=False, description=""):
-        return self.request_handler.post(f"/users/{user_id}/playlists", json={
+        return self._log_and_call("create_playlist", f"/users/{user_id}/playlists", http_method="post", json={
             "name": name,
             "public": public,
             "collaborative": collaborative,
@@ -53,37 +77,35 @@ class SpotifyClient:
         payload = {"uris": uris}
         if position is not None:
             payload["position"] = position
-        return self.request_handler.post(f"/playlists/{playlist_id}/tracks", json=payload)
+        return self._log_and_call("add_tracks_to_playlist", f"/playlists/{playlist_id}/tracks", http_method="post", json=payload)
 
     def get_playlist(self, playlist_id: str, market=None, fields=None, additional_types=None):
         params = {k: v for k, v in {
             "market": market, "fields": fields, "additional_types": additional_types
         }.items() if v is not None}
-        return self.request_handler.get(f"/playlists/{playlist_id}", params=params or None)
+        return self._log_and_call("get_playlist", f"/playlists/{playlist_id}", http_method="get", params=params or None)
 
     def get_playlist_items(self, playlist_id: str, market=None, fields=None, limit=None, offset=None):
         params = {k: v for k, v in {
             "market": market, "fields": fields, "limit": limit, "offset": offset
         }.items() if v is not None}
-        return self.request_handler.get(f"/playlists/{playlist_id}/tracks", params=params or None)
+        return self._log_and_call("get_playlist_items", f"/playlists/{playlist_id}/tracks", http_method="get", params=params or None)
 
     def change_playlist_details(self, playlist_id: str, name=None, public=None, collaborative=None, description=None):
         payload = {k: v for k, v in {
             "name": name, "public": public, "collaborative": collaborative, "description": description
         }.items() if v is not None}
-        return self.request_handler.put(f"/playlists/{playlist_id}", json=payload)
+        return self._log_and_call("change_playlist_details", f"/playlists/{playlist_id}", http_method="put", json=payload)
 
     def follow_playlist(self, playlist_id: str, public: bool = True):
-        return self.request_handler.put(f"/playlists/{playlist_id}/followers", json={"public": public})
+        return self._log_and_call("follow_playlist", f"/playlists/{playlist_id}/followers", http_method="put", json={"public": public})
 
     def unfollow_playlist(self, playlist_id: str):
-        return self.request_handler.delete(f"/playlists/{playlist_id}/followers")
+        return self._log_and_call("unfollow_playlist", f"/playlists/{playlist_id}/followers", http_method="delete")
 
     def remove_tracks_from_playlist(self, playlist_id: str, uris: list[str]):
-        payload = {
-            "tracks": [{"uri": uri} for uri in uris]
-        }
-        return self.request_handler.delete_with_body(f"/playlists/{playlist_id}/tracks", json=payload)
+        payload = {"tracks": [{"uri": uri} for uri in uris]}
+        return self._log_and_call("remove_tracks_from_playlist", f"/playlists/{playlist_id}/tracks", http_method="delete_with_body", json=payload)
 
     def reorder_playlist_items(self, playlist_id: str, range_start: int, insert_before: int, range_length: int = 1,
                                snapshot_id: str = None):
@@ -94,17 +116,12 @@ class SpotifyClient:
         }
         if snapshot_id:
             payload["snapshot_id"] = snapshot_id
-        return self.request_handler.put(f"/playlists/{playlist_id}/tracks", json=payload)
+        return self._log_and_call("reorder_playlist_items", f"/playlists/{playlist_id}/tracks", http_method="put", json=payload)
 
     def upload_custom_playlist_cover_image(self, playlist_id: str, image_base64: str):
         headers = self.request_handler.headers.copy()
         headers["Content-Type"] = "image/jpeg"
-        return self.request_handler.put(
-            f"/playlists/{playlist_id}/images",
-            json=None,
-            data=image_base64,
-            custom_headers=headers
-        )
+        return self._log_and_call("upload_playlist_cover", f"/playlists/{playlist_id}/images", http_method="put", json=None, data=image_base64, custom_headers=headers)
 
     # ===========================
     # Browse
@@ -112,13 +129,16 @@ class SpotifyClient:
 
     def get_featured_playlists(self, country=None, locale=None, timestamp=None, limit=None, offset=None):
         params = {k: v for k, v in {
-            "country": country,
-            "locale": locale,
-            "timestamp": timestamp,
-            "limit": limit,
-            "offset": offset
+            "country": country, "locale": locale, "timestamp": timestamp,
+            "limit": limit, "offset": offset
         }.items() if v is not None}
-        return self.request_handler.get("/browse/featured-playlists", params=params)
+        return self._log_and_call("get_featured_playlists", "/browse/featured-playlists", http_method="get", params=params)
+
+    def get_categories(self, country=None, locale=None, limit=None, offset=None):
+        params = {k: v for k, v in {
+            "country": country, "locale": locale, "limit": limit, "offset": offset
+        }.items() if v is not None}
+        return self._log_and_call("get_categories", "/browse/categories", http_method="get", params=params)
 
     # ===========================
     # Search
@@ -137,14 +157,4 @@ class SpotifyClient:
             params["offset"] = offset
         if include_external:
             params["include_external"] = include_external
-        return self.request_handler.get("/search", params=params)
-
-    def get_categories(self, country=None, locale=None, limit=None, offset=None):
-        params = {k: v for k, v in {
-            "country": country,
-            "locale": locale,
-            "limit": limit,
-            "offset": offset
-        }.items() if v is not None}
-        return self.request_handler.get("/browse/categories", params=params)
-
+        return self._log_and_call("search", "/search", http_method="get", params=params)
