@@ -4,7 +4,7 @@ import pytest
 import requests
 from pydantic_core import ValidationError
 
-from infra.api_clients.auth_client import AuthClient
+from infra.api_clients.spotify_client import SpotifyClient
 from infra.config.settings import get_settings
 from infra.models.token_response import TokenResponse
 from utils.assertion_manager import (
@@ -27,7 +27,7 @@ INVALID_GRANT_CONTEXT = "Invalid grant_type values"
 
 @pytest.mark.positive
 def test_token_success_with_valid_credentials():
-    client = AuthClient()
+    client = SpotifyClient()
     full_response = client.get_token_response()
 
     assert_response_schema(full_response, TokenResponse, context=SMOKE_TOKEN_CONTEXT)
@@ -44,7 +44,7 @@ def test_token_invalid_credentials(monkeypatch, client_id, client_secret, expect
     monkeypatch.setenv("SPOTIFY_CLIENT_ID", client_id)
     monkeypatch.setenv("SPOTIFY_CLIENT_SECRET", client_secret)
 
-    client = AuthClient()
+    client = SpotifyClient()
     response = client.get_token_response(raw=True)
 
     assert_error_response(

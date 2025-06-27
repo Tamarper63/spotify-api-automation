@@ -163,13 +163,13 @@ def assert_response_schema(response: dict, schema_model: type[BaseModel], contex
         )
 
 
-def ensure_tracks_exist_in_playlist(api_clients, playlist_id: str, uris: list[str]):
+def ensure_tracks_exist_in_playlist(api_client, playlist_id: str, uris: list[str]):
     """
     Ensure the specified URIs exist in the playlist.
     If not present — add them.
     This is used for test setup only.
     """
-    response = api_clients.playlist.get_playlist_items(playlist_id, limit=100)
+    response = api_client.get_playlist_items(playlist_id, limit=100)
     assert_status_code_ok(response, 200, "Fetch playlist items for validation")
 
     existing_uris = {
@@ -180,5 +180,5 @@ def ensure_tracks_exist_in_playlist(api_clients, playlist_id: str, uris: list[st
 
     missing_uris = [uri for uri in uris if uri not in existing_uris]
     if missing_uris:
-        add_resp = api_clients.playlist.add_tracks_to_playlist(playlist_id, missing_uris)
+        add_resp = api_client.add_tracks_to_playlist(playlist_id, missing_uris)
         assert_status_code_ok(add_resp, 201, "Add tracks to playlist (test setup)")
