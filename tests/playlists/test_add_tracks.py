@@ -9,7 +9,7 @@ from utils.assertion_manager import (
 
 @pytest.mark.positive
 def test_add_tracks_should_return_201(user_api_clients, default_playlist_id, sample_uris):
-    response = user_api_clients.playlist.add_tracks_to_playlist(
+    response = user_api_clients.spotify.add_tracks_to_playlist(
         playlist_id=default_playlist_id,
         uris=sample_uris
     )
@@ -18,7 +18,7 @@ def test_add_tracks_should_return_201(user_api_clients, default_playlist_id, sam
 
 @pytest.mark.positive
 def test_add_tracks_with_position_should_return_201(user_api_clients, default_playlist_id, sample_uris):
-    response = user_api_clients.playlist.add_tracks_to_playlist(
+    response = user_api_clients.spotify.add_tracks_to_playlist(
         playlist_id=default_playlist_id,
         uris=sample_uris,
         position=0
@@ -32,9 +32,6 @@ def test_add_tracks_with_position_should_return_201(user_api_clients, default_pl
 
 @pytest.mark.negative
 def test_add_tracks_without_auth(unauthenticated_playlist_client, default_playlist_id, sample_uris):
-    """
-    Sending Authorization header with empty token → 400 Bad Request
-    """
     response = unauthenticated_playlist_client.add_tracks_to_playlist(
         playlist_id=default_playlist_id,
         uris=sample_uris
@@ -48,9 +45,6 @@ def test_add_tracks_without_auth(unauthenticated_playlist_client, default_playli
 
 @pytest.mark.negative
 def test_add_tracks_with_no_authorization_header(default_playlist_id, sample_uris):
-    """
-    Fully omit Authorization header → 401 Unauthorized
-    """
     response = requests.post(
         url=f"https://api.spotify.com/v1/playlists/{default_playlist_id}/tracks",
         json={"uris": sample_uris},
@@ -61,7 +55,7 @@ def test_add_tracks_with_no_authorization_header(default_playlist_id, sample_uri
 
 @pytest.mark.negative
 def test_add_tracks_with_invalid_uri(user_api_clients, default_playlist_id, invalid_track_uri):
-    response = user_api_clients.playlist.add_tracks_to_playlist(
+    response = user_api_clients.spotify.add_tracks_to_playlist(
         playlist_id=default_playlist_id,
         uris=[invalid_track_uri]
     )

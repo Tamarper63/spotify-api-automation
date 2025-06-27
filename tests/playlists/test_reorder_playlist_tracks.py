@@ -8,7 +8,7 @@ def test_reorder_tracks_should_return_200(user_api_clients, reorder_ready_playli
     Valid reorder request returns 200 and changes track order.
     """
     playlist_id = reorder_ready_playlist
-    response = user_api_clients.playlist.reorder_playlist_items(
+    response = user_api_clients.spotify.reorder_playlist_items(
         playlist_id=playlist_id,
         range_start=0,
         insert_before=2
@@ -22,7 +22,7 @@ def test_reorder_tracks_with_invalid_range_should_return_400(user_api_clients, r
     Reordering with invalid range_start (e.g., -1) returns 400.
     """
     playlist_id = reorder_ready_playlist
-    response = user_api_clients.playlist.reorder_playlist_items(
+    response = user_api_clients.spotify.reorder_playlist_items(
         playlist_id=playlist_id,
         range_start=-1,
         insert_before=1
