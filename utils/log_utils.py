@@ -1,6 +1,5 @@
-# infra/utils/log_utils.py
-
 import json
+
 import pytest
 
 
@@ -13,11 +12,9 @@ def log_api_call(method: str, url: str, status_code: int, elapsed_ms: int, respo
         except Exception:
             entry += f"\n📄 Response:\n{response_body}"
 
-    try:
-        # צור מבנה לוג אם לא קיים
-        node = getattr(pytest, "current_test_node", {})
-        node.setdefault("perf_logs", []).append(entry)
-        pytest.current_test_node = node
-    except Exception as e:
-        # fallback – אפשרות לדפדוף STDOUT (אם נדרש)
+    # Write to pytest runtime log
+    if hasattr(pytest, "current_test_node"):
+        pytest.current_test_node.setdefault("perf_logs", []).append(entry)
+    else:
+        # Fallback: temporary store in file or local context (for debugging only)
         print(f"[log fallback] {entry}")

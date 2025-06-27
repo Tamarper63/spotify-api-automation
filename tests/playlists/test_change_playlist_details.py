@@ -1,5 +1,7 @@
+
 import pytest
 import time
+import requests
 
 from utils.assertion_manager import (
     assert_status_code_ok,
@@ -8,19 +10,23 @@ from utils.assertion_manager import (
 
 
 @pytest.fixture
-def new_temp_playlist(user_api_clients):
-    user_id = user_api_clients.spotify.get_current_user_profile().json()["id"]
+def new_temp_playlist(spotify_user_client):
+    user_id = spotify_user_client.get_current_user_profile().json()["id"]
     playlist_name = f"Temp_{int(time.time())}"
-    playlist_id = user_api_clients.spotify.create_playlist(user_id, playlist_name).json()["id"]
+    playlist_id = spotify_user_client.create_playlist(user_id, playlist_name).json()["id"]
     yield playlist_id
-    user_api_clients.spotify.unfollow_playlist(playlist_id)
+    spotify_user_client.unfollow_playlist(playlist_id)
 
 
 @pytest.fixture
-def followed_playlist(user_api_clients, new_temp_playlist):
-    user_api_clients.spotify.follow_playlist(new_temp_playlist)
+def followed_playlist(spotify_user_client, new_temp_playlist):
+    spotify_user_client.follow_playlist(new_temp_playlist)
     return new_temp_playlist
 
+
+# ===========================
+# Positive Tests
+# ===========================
 
 @pytest.mark.positive
 @pytest.mark.parametrize("name, public, collaborative, description", [
@@ -31,9 +37,9 @@ def followed_playlist(user_api_clients, new_temp_playlist):
     ("Set to private", False, None, "Making private")
 ])
 def test_change_playlist_details_optional_params_should_return_200(
-    user_api_clients, followed_playlist, name, public, collaborative, description
+    spotify_user_client, followed_playlist, name, public, collaborative, description
 ):
-    response = user_api_clients.spotify.change_playlist_details(
+    response = spotify_user_client.change_playlist_details(
         playlist_id=followed_playlist,
         name=name,
         public=public,
@@ -45,9 +51,26 @@ def test_change_playlist_details_optional_params_should_return_200(
     assert_status_code_ok(response, 200, "Change playlist details with optional params")
 
 
+# ===========================
+# Behavioral Test
+# ===========================
+
+@pytest.mark.behavior
+def test_public_update_succeeds_even_without_follow(spotify_user_client, new_temp_playlist):
+    response = spotify_user_client.change_playlist_details(
+        playlist_id=new_temp_playlist,
+        public=True
+    )
+    assert_status_code_ok(response, 200, "Spotify allows making playlist public without follow")
+
+
+# ===========================
+# Negative Tests
+# ===========================
+
 @pytest.mark.negative
-def test_change_playlist_public_and_collaborative_should_return_403(user_api_clients, followed_playlist):
-    response = user_api_clients.spotify.change_playlist_details(
+def test_change_playlist_public_and_collaborative_should_return_403(spotify_user_client, followed_playlist):
+    response = spotify_user_client.change_playlist_details(
         playlist_id=followed_playlist,
         public=True,
         collaborative=True
@@ -60,9 +83,56 @@ def test_change_playlist_public_and_collaborative_should_return_403(user_api_cli
 
 
 @pytest.mark.behavior
-def test_public_update_succeeds_even_without_follow(user_api_clients, new_temp_playlist):
-    response = user_api_clients.spotify.change_playlist_details(
-        playlist_id=new_temp_playlist,
-        public=True
+def test_change_playlist_with_empty_name_should_not_change_name(spotify_user_client, followed_playlist):
+    original_playlist = spotify_user_client.get_playlist(followed_playlist).json()
+    original_name = original_playlist["name"]
+
+    response = spotify_user_client.change_playlist_details(
+        playlist_id=followed_playlist,
+        name=""
     )
-    assert_status_code_ok(response, 200, "Spotify allows making playlist public without follow")
+    assert_status_code_ok(response, 200, "Change playlist details with empty name")
+
+    updated_playlist = spotify_user_client.get_playlist(followed_playlist).json()
+    assert updated_playlist["name"] == original_name, "❌ Playlist name should not change on empty update"
+
+
+
+@pytest.mark.negative
+def test_change_playlist_with_long_description_should_return_400(spotify_user_client, followed_playlist):
+    long_description = "A" * 1001
+    response = spotify_user_client.change_playlist_details(
+        playlist_id=followed_playlist,
+        description=long_description
+    )
+    assert_error_response(
+        response,
+        expected_status_codes=400,
+        expected_message_substring="description"
+    )
+
+
+@pytest.mark.negative
+def test_change_playlist_without_auth_should_return_400(unauthenticated_playlist_client, default_playlist_id):
+    response = unauthenticated_playlist_client.change_playlist_details(
+        playlist_id=default_playlist_id,
+        name="Should Fail"
+    )
+    assert_error_response(
+        response,
+        expected_status_codes=400,
+        expected_message_substring="Only valid bearer"
+    )
+
+
+@pytest.mark.negative
+def test_change_playlist_with_invalid_id_should_return_404(spotify_user_client):
+    response = spotify_user_client.change_playlist_details(
+        playlist_id="nonexistent123",
+        name="Should Fail"
+    )
+    assert_error_response(
+        response,
+        expected_status_codes=[400, 404],
+        expected_message_substring="invalid"
+    )

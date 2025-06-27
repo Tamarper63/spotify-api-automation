@@ -1,3 +1,4 @@
+
 # spotify_client.py – Unified Client for Spotify Web API
 
 import base64
@@ -9,12 +10,6 @@ from utils.log_utils import log_api_call
 
 
 class SpotifyClient:
-    """
-    Unified Spotify API Client.
-    All endpoint operations are encapsulated in a single interface,
-    split by domain (token/user/playlist/search/browse).
-    """
-
     def __init__(self, request_handler=None, client_id: str = None, client_secret: str = None):
         self.request_handler = request_handler
         settings = get_settings()
@@ -24,7 +19,13 @@ class SpotifyClient:
 
     def _log_and_call(self, method: str, url: str, *, http_method: str, **kwargs):
         start = time.perf_counter()
-        response = getattr(self.request_handler, http_method)(url, **kwargs)
+
+        if not hasattr(self.request_handler, http_method):
+            raise ValueError(f"Unsupported HTTP method: {http_method}")
+
+        request_func = getattr(self.request_handler, http_method)
+        response = request_func(url, **kwargs)
+
         elapsed = int((time.perf_counter() - start) * 1000)
         try:
             log_api_call(
@@ -38,10 +39,6 @@ class SpotifyClient:
             pass
         return response
 
-    # ===========================
-    # Token Handling
-    # ===========================
-
     def get_token_response(self, raw: bool = False):
         headers = {
             "Authorization": f"Basic {self._encode_credentials()}",
@@ -54,16 +51,8 @@ class SpotifyClient:
     def _encode_credentials(self) -> str:
         return base64.b64encode(f"{self.client_id}:{self.client_secret}".encode()).decode()
 
-    # ===========================
-    # User
-    # ===========================
-
     def get_current_user_profile(self):
         return self._log_and_call("get_current_user_profile", "/me", http_method="get")
-
-    # ===========================
-    # Playlist
-    # ===========================
 
     def create_playlist(self, user_id: str, name: str, public=True, collaborative=False, description=""):
         return self._log_and_call("create_playlist", f"/users/{user_id}/playlists", http_method="post", json={
@@ -123,26 +112,24 @@ class SpotifyClient:
         headers["Content-Type"] = "image/jpeg"
         return self._log_and_call("upload_playlist_cover", f"/playlists/{playlist_id}/images", http_method="put", json=None, data=image_base64, custom_headers=headers)
 
-    # ===========================
-    # Browse
-    # ===========================
-
     def get_featured_playlists(self, country=None, locale=None, timestamp=None, limit=None, offset=None):
         params = {k: v for k, v in {
-            "country": country, "locale": locale, "timestamp": timestamp,
-            "limit": limit, "offset": offset
+            "country": country,
+            "locale": locale,
+            "timestamp": timestamp,
+            "limit": limit,
+            "offset": offset
         }.items() if v is not None}
         return self._log_and_call("get_featured_playlists", "/browse/featured-playlists", http_method="get", params=params)
 
     def get_categories(self, country=None, locale=None, limit=None, offset=None):
         params = {k: v for k, v in {
-            "country": country, "locale": locale, "limit": limit, "offset": offset
+            "country": country,
+            "locale": locale,
+            "limit": limit,
+            "offset": offset
         }.items() if v is not None}
         return self._log_and_call("get_categories", "/browse/categories", http_method="get", params=params)
-
-    # ===========================
-    # Search
-    # ===========================
 
     def search(self, query: str, types: list[str], market=None, limit=None, offset=None, include_external=None):
         params = {
