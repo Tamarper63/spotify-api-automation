@@ -1,11 +1,7 @@
-
-# spotify_client.py – Unified Client for Spotify Web API
-
 import base64
 import time
-from pydantic_core import ValidationError
-from infra.http.request_sender import _send_request
 from infra.config.settings import get_settings
+from infra.http.request_sender import _send_request
 from utils.log_utils import log_api_call
 
 
@@ -19,13 +15,7 @@ class SpotifyClient:
 
     def _log_and_call(self, method: str, url: str, *, http_method: str, **kwargs):
         start = time.perf_counter()
-
-        if not hasattr(self.request_handler, http_method):
-            raise ValueError(f"Unsupported HTTP method: {http_method}")
-
-        request_func = getattr(self.request_handler, http_method)
-        response = request_func(url, **kwargs)
-
+        response = getattr(self.request_handler, http_method)(url, **kwargs)
         elapsed = int((time.perf_counter() - start) * 1000)
         try:
             log_api_call(
@@ -39,6 +29,9 @@ class SpotifyClient:
             pass
         return response
 
+    def _encode_credentials(self) -> str:
+        return base64.b64encode(f"{self.client_id}:{self.client_secret}".encode()).decode()
+
     def get_token_response(self, raw: bool = False):
         headers = {
             "Authorization": f"Basic {self._encode_credentials()}",
@@ -47,9 +40,6 @@ class SpotifyClient:
         data = {"grant_type": "client_credentials"}
         response = _send_request(url=self.token_url, method="POST", headers=headers, data=data)
         return response if raw else response.json()
-
-    def _encode_credentials(self) -> str:
-        return base64.b64encode(f"{self.client_id}:{self.client_secret}".encode()).decode()
 
     def get_current_user_profile(self):
         return self._log_and_call("get_current_user_profile", "/me", http_method="get")
@@ -96,8 +86,7 @@ class SpotifyClient:
         payload = {"tracks": [{"uri": uri} for uri in uris]}
         return self._log_and_call("remove_tracks_from_playlist", f"/playlists/{playlist_id}/tracks", http_method="delete_with_body", json=payload)
 
-    def reorder_playlist_items(self, playlist_id: str, range_start: int, insert_before: int, range_length: int = 1,
-                               snapshot_id: str = None):
+    def reorder_playlist_items(self, playlist_id: str, range_start: int, insert_before: int, range_length: int = 1, snapshot_id: str = None):
         payload = {
             "range_start": range_start,
             "insert_before": insert_before,

@@ -108,6 +108,6 @@ def pytest_runtest_makereport(item, call):
     outcome = yield
     report = outcome.get_result()
     if report.when == "call":
-        perf_logs = getattr(pytest, "current_test_node", {}).get("perf_logs", [])
-        if perf_logs:
-            report.sections.append(("API Requests", "\n".join(perf_logs)))
+        logs = getattr(pytest, "current_test_node", {}).get("perf_logs", [])
+        if logs:
+            report.sections.append(("API Requests", "\n".join(logs)))
