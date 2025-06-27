@@ -104,7 +104,6 @@ def isolated_test_playlist(user_api_clients, sample_uris):
 # =======================
 
 def pytest_runtest_logstart(nodeid, location):
-    # Initialize a log container per test node
     pytest.current_test_node = {"perf_logs": []}
 
 
@@ -115,7 +114,6 @@ def pytest_runtest_makereport(item, call):
     if report.when == "call":
         perf_logs = getattr(pytest, "current_test_node", {}).get("perf_logs", [])
         if perf_logs:
-            # Append all performance logs to HTML report under "API Requests"
             report.sections.append(("API Requests", "\n".join(perf_logs)))
 
 
