@@ -1,3 +1,4 @@
+from requests import Response
 
 from infra.http.request_sender import _send_request
 
@@ -11,50 +12,27 @@ class RequestHandler:
             "Content-Type": "application/json"
         }
 
-    def get(self, endpoint: str, params=None):
+    def _request(self, method: str, endpoint: str, **kwargs):
         url = f"{self.base_url}{endpoint}"
+        headers = kwargs.pop("headers", self.headers)
         return _send_request(
             url=url,
-            method="GET",
-            headers=self.headers,
-            params=params
-        )
-
-    def post(self, endpoint: str, json=None):
-        url = f"{self.base_url}{endpoint}"
-        return _send_request(
-            url=url,
-            method="POST",
-            headers=self.headers,
-            json=json
-        )
-
-    def put(self, endpoint: str, json=None, data=None, custom_headers=None):
-        url = f"{self.base_url}{endpoint}"
-        headers = custom_headers if custom_headers else self.headers
-        return _send_request(
-            url=url,
-            method="PUT",
+            method=method,
             headers=headers,
-            json=json,
-            data=data
+            **kwargs
         )
 
-    def delete(self, endpoint: str, json=None):
-        url = f"{self.base_url}{endpoint}"
-        return _send_request(
-            url=url,
-            method="DELETE",
-            headers=self.headers,
-            json=json
-        )
+    def get(self, endpoint: str, **kwargs):
+        return self._request("GET", endpoint, **kwargs)
 
-    def delete_with_body(self, endpoint: str, json=None):
-        url = f"{self.base_url}{endpoint}"
-        return _send_request(
-            url=url,
-            method="DELETE",
-            headers=self.headers,
-            json=json
-        )
+    def post(self, endpoint: str, **kwargs):
+        return self._request("POST", endpoint, **kwargs)
 
+    def put(self, endpoint: str, **kwargs):
+        return self._request("PUT", endpoint, **kwargs)
+
+    def delete(self, url: str, *, json=None, **kwargs) -> Response:
+        return self._request("DELETE", url, json=json, **kwargs)
+
+    def patch(self, endpoint: str, **kwargs):
+        return self._request("PATCH", endpoint, **kwargs)

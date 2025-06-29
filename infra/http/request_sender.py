@@ -1,8 +1,7 @@
 import requests
 import time
-import pytest
-import json
 from typing import Optional, Dict, Any, Union
+from utils.log_utils import log_api_call
 
 
 def _send_request(
@@ -15,14 +14,11 @@ def _send_request(
     files: Optional[Dict[str, Any]] = None,
     timeout: int = 10
 ) -> requests.Response:
-    """
-    Sends an HTTP request with timing and logging for pytest-html.
-    """
     method = method.upper()
     headers = headers or {"Content-Type": "application/json"}
 
-    start_time = time.perf_counter()
     try:
+        start = time.perf_counter()
         response = requests.request(
             method=method,
             url=url,
@@ -33,27 +29,20 @@ def _send_request(
             files=files,
             timeout=timeout
         )
-        duration_ms = int((time.perf_counter() - start_time) * 1000)
-        response.request_duration = duration_ms
+        elapsed_ms = int((time.perf_counter() - start) * 1000)
 
-        # Try to extract response body
         try:
             body = response.json()
-            body_str = json.dumps(body, indent=2, ensure_ascii=False)
         except Exception:
-            body_str = response.text
+            body = response.text
 
-        # Build log entry
-        log_entry = (
-            f"{method} {url}\n"
-            f"⏱ {duration_ms} ms | 🔢 Status: {response.status_code} | 📦 Size: {len(response.content)} bytes"
-            f"\n📄 Response:\n{body_str}"
+        log_api_call(
+            method=method,
+            url=url,
+            status_code=response.status_code,
+            elapsed_ms=elapsed_ms,
+            response_body=body
         )
-
-        # Store in current test node
-        node = getattr(pytest, "current_test_node", {})
-        node.setdefault("perf_logs", []).append(log_entry)
-        pytest.current_test_node = node
 
         return response
 
