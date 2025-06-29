@@ -1,6 +1,8 @@
 import os
 import pytest
 from dotenv import load_dotenv
+
+from infra.config.settings import get_settings
 from utils.yaml_loader import load_yaml_data
 from infra.api_clients.spotify_client import SpotifyClient
 from infra.auth.token_manager import TokenManager
@@ -67,8 +69,12 @@ def invalid_track_uri() -> str:
 # === Playlist Fixtures ===
 
 @pytest.fixture(scope="session")
-def default_playlist_id() -> str:
-    return os.getenv("DEFAULT_PLAYLIST_ID", "7yyTti5oj0AYY68Zlocb1z")
+def default_playlist_id(settings) -> str:
+    return settings.default_playlist_id
+
+@pytest.fixture(scope="session")
+def settings():
+    return get_settings()
 
 
 @pytest.fixture

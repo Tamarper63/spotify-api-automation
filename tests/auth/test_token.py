@@ -1,5 +1,6 @@
-from unittest import skip
+# tests/auth/test_token.py
 
+from unittest import skip
 import pytest
 import requests
 from pydantic_core import ValidationError
@@ -40,11 +41,8 @@ def test_token_success_with_valid_credentials():
 @pytest.mark.parametrize("client_id, client_secret, expected_message", [
     ("invalid_id", "invalid_secret", "invalid client"),
 ])
-def test_token_invalid_credentials(monkeypatch, client_id, client_secret, expected_message):
-    monkeypatch.setenv("SPOTIFY_CLIENT_ID", client_id)
-    monkeypatch.setenv("SPOTIFY_CLIENT_SECRET", client_secret)
-
-    client = SpotifyClient()
+def test_token_invalid_credentials(client_id, client_secret, expected_message):
+    client = SpotifyClient(client_id=client_id, client_secret=client_secret)
     response = client.get_token_response(raw=True)
 
     assert_error_response(
@@ -55,7 +53,7 @@ def test_token_invalid_credentials(monkeypatch, client_id, client_secret, expect
     )
 
 
-@skip(reason='working only while run alon our the current file, failed consistently while run as part of large suit')
+@skip(reason='working only when run alone; fails when part of full suite due to .env caching')
 @pytest.mark.negative
 @pytest.mark.parametrize("env_to_delete", ["SPOTIFY_CLIENT_ID", "SPOTIFY_CLIENT_SECRET"])
 def test_token_fails_with_partial_env(monkeypatch, env_to_delete):
@@ -65,7 +63,7 @@ def test_token_fails_with_partial_env(monkeypatch, env_to_delete):
         _ = get_settings()
 
 
-@skip(reason='working only while run alon our the current file, failed consistently while run as part of large suit')
+@skip(reason='working only when run alone; fails when part of full suite due to .env caching')
 @pytest.mark.negative
 def test_token_fails_with_all_env_missing(monkeypatch):
     monkeypatch.delenv("SPOTIFY_CLIENT_ID", raising=False)
