@@ -1,7 +1,5 @@
 import requests
 from pydantic import ValidationError, BaseModel
-
-from infra.models.error_response import ErrorResponse
 from infra.models.playlist_response import PlaylistTrackResponse, PlaylistItem
 from tests.constants.playlist_constants import EXPECTED_KEYS_GET_PLAYLIST_ITEMS
 
@@ -24,14 +22,6 @@ def assert_keys_exist(response_json, keys):
     assert not missing, f"❌ Missing keys in response: {missing}"
 
 
-def assert_json_field_equals(response, field: str, expected_value, context=""):
-    response_json = response.json()
-    actual = response_json.get(field)
-    assert actual == expected_value, (
-        f"❌ {context}: Expected `{field}` to be '{expected_value}', but got '{actual}'"
-    )
-
-
 def assert_json_matches_expected(response_json: dict, expected: dict, context=""):
     """
     Recursively assert that expected fields match in a JSON response.
@@ -48,23 +38,6 @@ def assert_json_matches_expected(response_json: dict, expected: dict, context=""
             assert actual_value == expected_value, (
                 f"❌ {context}.{key}: Expected '{expected_value}', got '{actual_value}'"
             )
-
-
-def assert_nested_field_equals(response_json: dict, field_path: str, expected_value, context=""):
-    """
-    Assert that a nested field (like 'owner.display_name') matches the expected value.
-    """
-    keys = field_path.split(".")
-    current = response_json
-
-    for key in keys:
-        assert key in current, f"❌ Missing field `{field_path}` at `{key}`"
-        current = current[key]
-
-    assert current == expected_value, (
-            f"❌ Mismatch at `{field_path}`: expected `{expected_value}`, got `{current}`"
-            + (f" | Context: {context}" if context else "")
-    )
 
 
 def assert_token_is_valid(token: str):
