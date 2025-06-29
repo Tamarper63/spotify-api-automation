@@ -1,5 +1,3 @@
-# tests/auth/test_token.py
-
 from unittest import skip
 import pytest
 import requests

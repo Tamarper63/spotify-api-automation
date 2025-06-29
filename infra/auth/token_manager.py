@@ -1,7 +1,5 @@
 import os
 import time
-
-from infra.api_clients.spotify_client import SpotifyClient
 from infra.auth.oauth_handler import OAuthHandler
 from infra.auth.token_provider import get_token_response
 
