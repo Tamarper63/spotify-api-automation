@@ -25,14 +25,18 @@ class Tracks(BaseModel):
 
 
 class PlaylistResponse(BaseModel):
-    id: str
-    name: str
-    public: Optional[bool]
+    collaborative: Optional[bool]
     description: Optional[str]
-    external_urls: ExternalUrls
-    href: HttpUrl
-    owner: Owner
-    tracks: Tracks
+    external_urls: dict
+    followers: Optional[dict]
+    href: str
+    id: str
+    images: list
+    name: str
+    owner: dict
+    public: Optional[bool]
+    snapshot_id: Optional[str]
+    tracks: dict
     type: str
     uri: str
 
