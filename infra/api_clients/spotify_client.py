@@ -1,5 +1,3 @@
-# infra/api_clients/spotify_client.py
-
 import base64
 import time
 from infra.config.settings import get_settings

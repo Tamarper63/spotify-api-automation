@@ -1,16 +1,10 @@
 import requests
 import webbrowser
 import urllib.parse
-import base64
-
 from infra.auth.user_token_provider import exchange_code_for_token
-from utils.auth_utils import encode_client_credentials
 
 
 class OAuthHandler:
-    # AUTH_URL = "https://accounts.spotify.com/authorize"
-    # TOKEN_URL = "https://accounts.spotify.com/api/token"
-
     AUTH_URL = "https://accounts.spotify.com/authorize"
 
     def __init__(self, client_id, client_secret, redirect_uri, scopes):

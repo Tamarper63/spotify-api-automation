@@ -1,5 +1,3 @@
-# infra/config/settings.py
-
 from pydantic_settings import BaseSettings
 from pydantic import Field
 from pydantic.v1 import Extra
@@ -24,7 +22,6 @@ class Settings(BaseSettings):
         env_file_encoding = "utf-8"
 
 
-# Singleton instance cache
 _instance: Settings | None = None
 
 
