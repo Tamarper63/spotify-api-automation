@@ -8,6 +8,10 @@ def get_valid_playlist_ids():
     return load_yaml_data("playlist_ids.yaml")["playlist_ids"]
 
 
+def filter_none(d: dict) -> dict:
+    return {k: v for k, v in d.items() if v is not None}
+
+
 def get_valid_playlists_with_names():
     """
     Returns a list of tuples: (playlist_id, expected_name) from playlist_metadata.yaml

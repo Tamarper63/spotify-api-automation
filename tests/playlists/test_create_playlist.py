@@ -1,9 +1,11 @@
 import pytest
 import requests
 import time
+
+from infra.models.playlist_response import PlaylistResponse
 from utils.assertion_manager import (
     assert_status_code_ok,
-    assert_error_response,
+    assert_error_response, assert_response_schema,
 )
 
 
@@ -98,3 +100,11 @@ def test_create_playlist_for_different_user_should_return_403(spotify_user_clien
         expected_status_codes=403,
         expected_message_substring="You cannot create a playlist for another user"
     )
+
+
+@pytest.mark.positive
+def test_create_playlist_schema_validation(spotify_user_client):
+    user_id = spotify_user_client.get_current_user_profile().json()["id"]
+    response = spotify_user_client.create_playlist(user_id, "Schema Test")
+    assert_status_code_ok(response, 201)
+    assert_response_schema(response.json(), PlaylistResponse)

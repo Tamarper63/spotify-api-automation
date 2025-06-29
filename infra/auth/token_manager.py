@@ -1,8 +1,7 @@
 import os
 import time
-
-from infra.api_clients.spotify_client import SpotifyClient
 from infra.auth.oauth_handler import OAuthHandler
+from infra.auth.token_provider import get_token_response
 
 
 def update_dotenv(key: str, value: str):
@@ -37,10 +36,9 @@ class TokenManager:
     def get_token(cls) -> str:
         now = time.time()
         if cls._token is None or now >= cls._expires_at:
-            auth_client = SpotifyClient()
-            response = auth_client.get_token_response()
+            response = get_token_response()
             cls._token = response["access_token"]
-            cls._expires_at = now + response["expires_in"] - 5  # buffer
+            cls._expires_at = now + response["expires_in"] - 5
         return cls._token
 
     @staticmethod
