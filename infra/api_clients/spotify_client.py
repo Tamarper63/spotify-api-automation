@@ -56,7 +56,8 @@ class SpotifyClient:
         payload = {"uris": uris}
         if position is not None:
             payload["position"] = position
-        return self._log_and_call("add_tracks_to_playlist", f"/playlists/{playlist_id}/tracks", http_method="post", json=payload)
+        return self._log_and_call("add_tracks_to_playlist", f"/playlists/{playlist_id}/tracks", http_method="post",
+                                  json=payload)
 
     def get_playlist(self, playlist_id: str, market=None, fields=None, additional_types=None):
         params = {k: v for k, v in {
@@ -68,25 +69,34 @@ class SpotifyClient:
         params = {k: v for k, v in {
             "market": market, "fields": fields, "limit": limit, "offset": offset
         }.items() if v is not None}
-        return self._log_and_call("get_playlist_items", f"/playlists/{playlist_id}/tracks", http_method="get", params=params or None)
+        return self._log_and_call("get_playlist_items", f"/playlists/{playlist_id}/tracks", http_method="get",
+                                  params=params or None)
 
     def change_playlist_details(self, playlist_id: str, name=None, public=None, collaborative=None, description=None):
         payload = {k: v for k, v in {
             "name": name, "public": public, "collaborative": collaborative, "description": description
         }.items() if v is not None}
-        return self._log_and_call("change_playlist_details", f"/playlists/{playlist_id}", http_method="put", json=payload)
+        return self._log_and_call("change_playlist_details", f"/playlists/{playlist_id}", http_method="put",
+                                  json=payload)
 
     def follow_playlist(self, playlist_id: str, public: bool = True):
-        return self._log_and_call("follow_playlist", f"/playlists/{playlist_id}/followers", http_method="put", json={"public": public})
+        return self._log_and_call("follow_playlist", f"/playlists/{playlist_id}/followers", http_method="put",
+                                  json={"public": public})
 
     def unfollow_playlist(self, playlist_id: str):
         return self._log_and_call("unfollow_playlist", f"/playlists/{playlist_id}/followers", http_method="delete")
 
     def remove_tracks_from_playlist(self, playlist_id: str, uris: list[str]):
         payload = {"tracks": [{"uri": uri} for uri in uris]}
-        return self._log_and_call("remove_tracks_from_playlist", f"/playlists/{playlist_id}/tracks", http_method="delete_with_body", json=payload)
+        return self._log_and_call(
+            "remove_tracks_from_playlist",
+            f"/playlists/{playlist_id}/tracks",
+            http_method="delete",
+            json=payload
+        )
 
-    def reorder_playlist_items(self, playlist_id: str, range_start: int, insert_before: int, range_length: int = 1, snapshot_id: str = None):
+    def reorder_playlist_items(self, playlist_id: str, range_start: int, insert_before: int, range_length: int = 1,
+                               snapshot_id: str = None):
         payload = {
             "range_start": range_start,
             "insert_before": insert_before,
@@ -94,12 +104,14 @@ class SpotifyClient:
         }
         if snapshot_id:
             payload["snapshot_id"] = snapshot_id
-        return self._log_and_call("reorder_playlist_items", f"/playlists/{playlist_id}/tracks", http_method="put", json=payload)
+        return self._log_and_call("reorder_playlist_items", f"/playlists/{playlist_id}/tracks", http_method="put",
+                                  json=payload)
 
     def upload_custom_playlist_cover_image(self, playlist_id: str, image_base64: str):
         headers = self.request_handler.headers.copy()
         headers["Content-Type"] = "image/jpeg"
-        return self._log_and_call("upload_playlist_cover", f"/playlists/{playlist_id}/images", http_method="put", json=None, data=image_base64, custom_headers=headers)
+        return self._log_and_call("upload_playlist_cover", f"/playlists/{playlist_id}/images", http_method="put",
+                                  json=None, data=image_base64, custom_headers=headers)
 
     def get_featured_playlists(self, country=None, locale=None, timestamp=None, limit=None, offset=None):
         params = {k: v for k, v in {
@@ -109,7 +121,8 @@ class SpotifyClient:
             "limit": limit,
             "offset": offset
         }.items() if v is not None}
-        return self._log_and_call("get_featured_playlists", "/browse/featured-playlists", http_method="get", params=params)
+        return self._log_and_call("get_featured_playlists", "/browse/featured-playlists", http_method="get",
+                                  params=params)
 
     def get_categories(self, country=None, locale=None, limit=None, offset=None):
         params = {k: v for k, v in {
