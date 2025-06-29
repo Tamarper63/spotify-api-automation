@@ -45,12 +45,13 @@ class SpotifyClient:
         return self._log_and_call("get_current_user_profile", "/me", http_method="get")
 
     def create_playlist(self, user_id: str, name: str, public=True, collaborative=False, description=""):
-        return self._log_and_call("create_playlist", f"/users/{user_id}/playlists", http_method="post", json={
+        payload = {
             "name": name,
             "public": public,
             "collaborative": collaborative,
             "description": description
-        })
+        }
+        return self._log_and_call("create_playlist", f"/users/{user_id}/playlists", http_method="post", json=payload)
 
     def add_tracks_to_playlist(self, playlist_id: str, uris: list[str], position: int = None):
         payload = {"uris": uris}
@@ -59,22 +60,30 @@ class SpotifyClient:
         return self._log_and_call("add_tracks_to_playlist", f"/playlists/{playlist_id}/tracks", http_method="post", json=payload)
 
     def get_playlist(self, playlist_id: str, market=None, fields=None, additional_types=None):
-        params = {k: v for k, v in {
-            "market": market, "fields": fields, "additional_types": additional_types
-        }.items() if v is not None}
-        return self._log_and_call("get_playlist", f"/playlists/{playlist_id}", http_method="get", params=params or None)
+        params = {
+            "market": market,
+            "fields": fields,
+            "additional_types": additional_types
+        }
+        return self._log_and_call("get_playlist", f"/playlists/{playlist_id}", http_method="get", params={k: v for k, v in params.items() if v is not None})
 
     def get_playlist_items(self, playlist_id: str, market=None, fields=None, limit=None, offset=None):
-        params = {k: v for k, v in {
-            "market": market, "fields": fields, "limit": limit, "offset": offset
-        }.items() if v is not None}
-        return self._log_and_call("get_playlist_items", f"/playlists/{playlist_id}/tracks", http_method="get", params=params or None)
+        params = {
+            "market": market,
+            "fields": fields,
+            "limit": limit,
+            "offset": offset
+        }
+        return self._log_and_call("get_playlist_items", f"/playlists/{playlist_id}/tracks", http_method="get", params={k: v for k, v in params.items() if v is not None})
 
     def change_playlist_details(self, playlist_id: str, name=None, public=None, collaborative=None, description=None):
-        payload = {k: v for k, v in {
-            "name": name, "public": public, "collaborative": collaborative, "description": description
-        }.items() if v is not None}
-        return self._log_and_call("change_playlist_details", f"/playlists/{playlist_id}", http_method="put", json=payload)
+        payload = {
+            "name": name,
+            "public": public,
+            "collaborative": collaborative,
+            "description": description
+        }
+        return self._log_and_call("change_playlist_details", f"/playlists/{playlist_id}", http_method="put", json={k: v for k, v in payload.items() if v is not None})
 
     def follow_playlist(self, playlist_id: str, public: bool = True):
         return self._log_and_call("follow_playlist", f"/playlists/{playlist_id}/followers", http_method="put", json={"public": public})
@@ -84,7 +93,7 @@ class SpotifyClient:
 
     def remove_tracks_from_playlist(self, playlist_id: str, uris: list[str]):
         payload = {"tracks": [{"uri": uri} for uri in uris]}
-        return self._log_and_call("remove_tracks_from_playlist", f"/playlists/{playlist_id}/tracks", http_method="delete_with_body", json=payload)
+        return self._log_and_call("remove_tracks_from_playlist", f"/playlists/{playlist_id}/tracks", http_method="delete", json=payload)
 
     def reorder_playlist_items(self, playlist_id: str, range_start: int, insert_before: int, range_length: int = 1, snapshot_id: str = None):
         payload = {
@@ -102,35 +111,31 @@ class SpotifyClient:
         return self._log_and_call("upload_playlist_cover", f"/playlists/{playlist_id}/images", http_method="put", json=None, data=image_base64, custom_headers=headers)
 
     def get_featured_playlists(self, country=None, locale=None, timestamp=None, limit=None, offset=None):
-        params = {k: v for k, v in {
+        params = {
             "country": country,
             "locale": locale,
             "timestamp": timestamp,
             "limit": limit,
             "offset": offset
-        }.items() if v is not None}
-        return self._log_and_call("get_featured_playlists", "/browse/featured-playlists", http_method="get", params=params)
+        }
+        return self._log_and_call("get_featured_playlists", "/browse/featured-playlists", http_method="get", params={k: v for k, v in params.items() if v is not None})
 
     def get_categories(self, country=None, locale=None, limit=None, offset=None):
-        params = {k: v for k, v in {
+        params = {
             "country": country,
             "locale": locale,
             "limit": limit,
             "offset": offset
-        }.items() if v is not None}
-        return self._log_and_call("get_categories", "/browse/categories", http_method="get", params=params)
+        }
+        return self._log_and_call("get_categories", "/browse/categories", http_method="get", params={k: v for k, v in params.items() if v is not None})
 
     def search(self, query: str, types: list[str], market=None, limit=None, offset=None, include_external=None):
         params = {
             "q": query,
-            "type": ",".join(types)
+            "type": ",".join(types),
+            "market": market,
+            "limit": limit,
+            "offset": offset,
+            "include_external": include_external
         }
-        if market:
-            params["market"] = market
-        if limit:
-            params["limit"] = limit
-        if offset:
-            params["offset"] = offset
-        if include_external:
-            params["include_external"] = include_external
-        return self._log_and_call("search", "/search", http_method="get", params=params)
+        return self._log_and_call("search", "/search", http_method="get", params={k: v for k, v in params.items() if v is not None})
