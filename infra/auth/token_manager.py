@@ -47,11 +47,9 @@ class TokenManager:
         expires_at = int(os.getenv("SPOTIFY_USER_EXPIRES_AT", "0"))
 
         if not access_token or time.time() > expires_at:
-            print("🔄 Token expired — refreshing...")
             refresh_token = os.getenv("SPOTIFY_REFRESH_TOKEN")
             if not refresh_token:
                 raise Exception("Missing refresh token in .env")
-
             handler = OAuthHandler(
                 client_id=os.getenv("SPOTIFY_CLIENT_ID"),
                 client_secret=os.getenv("SPOTIFY_CLIENT_SECRET"),
@@ -59,13 +57,9 @@ class TokenManager:
                 scopes=["playlist-modify-public", "playlist-modify-private", "user-read-private"]
             )
             tokens = handler.refresh_user_token(refresh_token)
-
             access_token = tokens["access_token"]
+            expires_at = int(time.time()) + tokens.get("expires_in", 3600)
             update_dotenv("SPOTIFY_USER_ACCESS_TOKEN", access_token)
-
-            # Save expiry time if provided
-            if "expires_in" in tokens:
-                expires_at = int(time.time()) + tokens["expires_in"]
-                update_dotenv("SPOTIFY_USER_EXPIRES_AT", str(expires_at))
-
+            update_dotenv("SPOTIFY_USER_EXPIRES_AT", str(expires_at))
         return access_token
+

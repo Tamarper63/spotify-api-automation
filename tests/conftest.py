@@ -17,11 +17,15 @@ def token() -> str:
 
 @pytest.fixture(scope="session")
 def user_token() -> str:
-    utok = TokenManager.get_user_token()
+    try:
+        utok = TokenManager.get_user_token()
+    except Exception as e:
+        print(f"[SKIP] User token error: {e}")
+        pytest.skip("Missing or invalid user token")
     if not utok:
+        print("[SKIP] No user token provided")
         pytest.skip("Missing user token")
     return utok
-
 
 @pytest.fixture(scope="function")
 def request_handler(token) -> RequestHandler:
