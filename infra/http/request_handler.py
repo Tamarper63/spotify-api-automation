@@ -18,6 +18,8 @@ class RequestHandler:
         url = f"{self.base_url}{endpoint}"
         headers = kwargs.pop("headers", self.headers)
 
+        # שלח את headers המקוריים ל-API
+        response = None
         start_time = time.perf_counter()
         response = _send_request(
             url=url,
@@ -27,11 +29,16 @@ class RequestHandler:
         )
         duration = time.perf_counter() - start_time
 
+        safe_headers = headers.copy()
+        if "Authorization" in safe_headers:
+            safe_headers["Authorization"] = "***MASKED***"
+
         self.api_call_metrics.append({
             "method": method,
             "url": url,
             "duration_sec": duration,
             "status_code": response.status_code,
+            "headers": safe_headers
         })
 
         return response
