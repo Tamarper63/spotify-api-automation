@@ -1,6 +1,11 @@
 from utils.yaml_loader import load_yaml_data
 
 
+def get_playlists_expected_responses():
+    playlists = load_yaml_data("playlist_metadata.yaml")["valid_playlists"]
+    return [(p["id"], p["expected"]) for p in playlists]
+
+
 def load_flat_yaml_kv(filename: str, root_key: str) -> list[tuple[str, any]]:
     """
     Load a nested YAML dict and flatten it into (field_path, value) tuples.
