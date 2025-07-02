@@ -7,3 +7,4 @@ pytest-html
 pydantic~=2.11.6
 pydantic_core~=2.33.2
 PyJWT~=2.10.1
+pydantic-settings
