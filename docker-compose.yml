@@ -1,0 +1,8 @@
+services:
+  spotify-api-tests:
+    build: .
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    command: pytest -s
