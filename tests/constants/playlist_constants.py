@@ -10,8 +10,16 @@ VALID_USER_ID = "spotify"
 
 # Expected keys in create_playlist response
 CREATE_PLAYLIST_KEYS = {
-    "id", "name", "public", "description",
-    "external_urls", "href", "owner", "tracks", "type", "uri"
+    "id",
+    "name",
+    "public",
+    "description",
+    "external_urls",
+    "href",
+    "owner",
+    "tracks",
+    "type",
+    "uri",
 }
 
 # Parametrize cases
@@ -39,12 +47,7 @@ PLAYLIST_ITEMS_KEYS = ["items", "href", "limit", "total"]
 
 DEFAULT_STATUS_OK = 200
 
-EXPECTED_KEYS_GET_PLAYLIST_ITEMS = [
-    "items",
-    "href",
-    "limit",
-    "total"
-]
+EXPECTED_KEYS_GET_PLAYLIST_ITEMS = ["items", "href", "limit", "total"]
 
 PLAYLIST_ITEMS_OPTIONAL_PARAMS_FILE = "playlist_items_params.yaml"
 

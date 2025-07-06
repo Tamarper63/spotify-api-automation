@@ -15,7 +15,7 @@ def create_test_playlist(client, user_id: str, name_prefix="e2e") -> str:
         name=playlist_name,
         public=False,
         collaborative=False,
-        description="e2e test flow"
+        description="e2e test flow",
     )
     assert_status_code_ok(response, 201, "Create playlist")
     return response.json()["id"]

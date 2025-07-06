@@ -11,7 +11,7 @@ BASE_URL = "https://api.spotify.com/v1"
 
 headers = {
     "Authorization": f"Bearer {ACCESS_TOKEN}",
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
 }
 
 # Step 1: Get current user's ID
@@ -23,13 +23,11 @@ user_id = user_response.json()["id"]
 data = {
     "name": "Automation Test Playlist",
     "description": "Playlist created via API test",
-    "public": False
+    "public": False,
 }
 
 create_response = requests.post(
-    f"{BASE_URL}/users/{user_id}/playlists",
-    headers=headers,
-    json=data
+    f"{BASE_URL}/users/{user_id}/playlists", headers=headers, json=data
 )
 create_response.raise_for_status()
 

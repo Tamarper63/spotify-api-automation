@@ -6,6 +6,7 @@ from infra.auth.token_provider import get_token_response
 
 def update_dotenv(key: str, value: str):
     from pathlib import Path
+
     env_path = Path(".env")
     lines = []
     found = False
@@ -54,7 +55,11 @@ class TokenManager:
                 client_id=os.getenv("SPOTIFY_CLIENT_ID"),
                 client_secret=os.getenv("SPOTIFY_CLIENT_SECRET"),
                 redirect_uri=os.getenv("SPOTIFY_REDIRECT_URI"),
-                scopes=["playlist-modify-public", "playlist-modify-private", "user-read-private"]
+                scopes=[
+                    "playlist-modify-public",
+                    "playlist-modify-private",
+                    "user-read-private",
+                ],
             )
             tokens = handler.refresh_user_token(refresh_token)
             access_token = tokens["access_token"]
@@ -62,4 +67,3 @@ class TokenManager:
             update_dotenv("SPOTIFY_USER_ACCESS_TOKEN", access_token)
             update_dotenv("SPOTIFY_USER_EXPIRES_AT", str(expires_at))
         return access_token
-
