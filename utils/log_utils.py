@@ -4,7 +4,9 @@ import json
 import pytest
 
 
-def log_api_call(method: str, url: str, status_code: int, elapsed_ms: int, response_body=None):
+def log_api_call(
+    method: str, url: str, status_code: int, elapsed_ms: int, response_body=None
+):
     entry = f"{method} {url}\n⏱ {elapsed_ms} ms | 📦 Status: {status_code}"
     if response_body:
         try:

@@ -33,7 +33,7 @@ class OAuthHandler:
             code=code,
             client_id=self.client_id,
             client_secret=self.client_secret,
-            redirect_uri=self.redirect_uri
+            redirect_uri=self.redirect_uri,
         )
 
     def refresh_user_token(self, token: str) -> dict:

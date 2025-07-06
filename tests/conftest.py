@@ -27,6 +27,7 @@ def user_token() -> str:
         pytest.skip("Missing user token")
     return utok
 
+
 @pytest.fixture(scope="function")
 def request_handler(token) -> RequestHandler:
     return RequestHandler(token)
