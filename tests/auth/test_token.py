@@ -23,6 +23,7 @@ INVALID_GRANT_CONTEXT = "Invalid grant_type values"
 
 # --- Positive Tests ---
 
+
 @pytest.mark.positive
 def test_token_success_with_valid_credentials():
     """
@@ -38,10 +39,14 @@ def test_token_success_with_valid_credentials():
 
 # --- Negative Tests ---
 
+
 @pytest.mark.negative
-@pytest.mark.parametrize("client_id, client_secret, expected_message", [
-    ("invalid_id", "invalid_secret", "invalid client"),
-])
+@pytest.mark.parametrize(
+    "client_id, client_secret, expected_message",
+    [
+        ("invalid_id", "invalid_secret", "invalid client"),
+    ],
+)
 def test_token_invalid_credentials(client_id, client_secret, expected_message):
     """
     Test token request failure with invalid client_id and client_secret.
@@ -54,13 +59,15 @@ def test_token_invalid_credentials(client_id, client_secret, expected_message):
         response,
         expected_status_codes=400,
         expected_message_substring=expected_message,
-        context=INVALID_CREDS_CONTEXT
+        context=INVALID_CREDS_CONTEXT,
     )
 
 
-@skip(reason='working only when run alone; fails in full suite due to .env caching')
+@skip(reason="working only when run alone; fails in full suite due to .env caching")
 @pytest.mark.negative
-@pytest.mark.parametrize("env_to_delete", ["SPOTIFY_CLIENT_ID", "SPOTIFY_CLIENT_SECRET"])
+@pytest.mark.parametrize(
+    "env_to_delete", ["SPOTIFY_CLIENT_ID", "SPOTIFY_CLIENT_SECRET"]
+)
 def test_token_fails_with_partial_env(monkeypatch, env_to_delete):
     """
     Test validation failure if partial environment variables are missing.
@@ -72,7 +79,7 @@ def test_token_fails_with_partial_env(monkeypatch, env_to_delete):
         _ = get_settings()
 
 
-@skip(reason='working only when run alone; fails in full suite due to .env caching')
+@skip(reason="working only when run alone; fails in full suite due to .env caching")
 @pytest.mark.negative
 def test_token_fails_with_all_env_missing(monkeypatch):
     """
@@ -98,7 +105,9 @@ def test_token_fails_with_no_auth_header():
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
 
-    assert_error_response(response, expected_status_codes=400, context=MISSING_AUTH_HEADER_CONTEXT)
+    assert_error_response(
+        response, expected_status_codes=400, context=MISSING_AUTH_HEADER_CONTEXT
+    )
 
 
 @pytest.mark.negative
@@ -112,39 +121,44 @@ def test_token_fails_with_invalid_url():
         data={"grant_type": "client_credentials"},
         headers={
             "Authorization": "Basic invalid_token",
-            "Content-Type": "application/x-www-form-urlencoded"
+            "Content-Type": "application/x-www-form-urlencoded",
         },
     )
 
     assert_error_response(
-        response,
-        expected_status_codes=[400, 403, 404],
-        context=INVALID_URL_CONTEXT
+        response, expected_status_codes=[400, 403, 404], context=INVALID_URL_CONTEXT
     )
 
 
 @pytest.mark.negative
-@pytest.mark.parametrize("grant_type, expected_status, expected_message", [
-    (None, 400, "grant_type parameter is missing"),
-    ("", 400, "grant_type parameter is missing"),
-    ("invalid_grant", 400, "grant_type invalid_grant is not supported"),
-])
-def test_token_fails_with_invalid_grant_type(grant_type, expected_status, expected_message):
+@pytest.mark.parametrize(
+    "grant_type, expected_status, expected_message",
+    [
+        (None, 400, "grant_type parameter is missing"),
+        ("", 400, "grant_type parameter is missing"),
+        ("invalid_grant", 400, "grant_type invalid_grant is not supported"),
+    ],
+)
+def test_token_fails_with_invalid_grant_type(
+    grant_type, expected_status, expected_message
+):
     """
     Test token request failure for invalid or missing grant_type values.
     Validates error message substring and status code.
     """
     headers = {
         "Authorization": "Basic invalid_token",
-        "Content-Type": "application/x-www-form-urlencoded"
+        "Content-Type": "application/x-www-form-urlencoded",
     }
     data = {"grant_type": grant_type} if grant_type is not None else {}
 
-    response = requests.post("https://accounts.spotify.com/api/token", headers=headers, data=data)
+    response = requests.post(
+        "https://accounts.spotify.com/api/token", headers=headers, data=data
+    )
 
     assert_error_response(
         response,
         expected_status_codes=expected_status,
         expected_message_substring=expected_message,
-        context=INVALID_GRANT_CONTEXT
+        context=INVALID_GRANT_CONTEXT,
     )

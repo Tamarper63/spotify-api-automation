@@ -10,7 +10,7 @@ class RequestHandler:
         self.base_url = "https://api.spotify.com/v1"
         self.headers = {
             "Authorization": f"Bearer {self.token}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
         self.api_call_metrics = []
 
@@ -21,25 +21,22 @@ class RequestHandler:
         # שלח את headers המקוריים ל-API
         response = None
         start_time = time.perf_counter()
-        response = _send_request(
-            url=url,
-            method=method,
-            headers=headers,
-            **kwargs
-        )
+        response = _send_request(url=url, method=method, headers=headers, **kwargs)
         duration = time.perf_counter() - start_time
 
         safe_headers = headers.copy()
         if "Authorization" in safe_headers:
             safe_headers["Authorization"] = "***MASKED***"
 
-        self.api_call_metrics.append({
-            "method": method,
-            "url": url,
-            "duration_sec": duration,
-            "status_code": response.status_code,
-            "headers": safe_headers
-        })
+        self.api_call_metrics.append(
+            {
+                "method": method,
+                "url": url,
+                "duration_sec": duration,
+                "status_code": response.status_code,
+                "headers": safe_headers,
+            }
+        )
 
         return response
 

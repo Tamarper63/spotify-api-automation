@@ -11,6 +11,7 @@ from utils.assertion_manager import (
 # Contract & Schema
 # ======================
 
+
 @pytest.mark.contract
 def test_user_profile_model_schema(spotify_user_client):
     response = spotify_user_client.get_current_user_profile()
@@ -21,6 +22,7 @@ def test_user_profile_model_schema(spotify_user_client):
 # ======================
 # Positive Tests
 # ======================
+
 
 @pytest.mark.smoke
 @pytest.mark.positive
@@ -34,6 +36,7 @@ def test_get_current_user_profile_should_return_200(spotify_user_client):
 # ======================
 # Negative Tests
 # ======================
+
 
 @pytest.mark.negative
 def test_get_current_user_profile_without_token():
@@ -69,6 +72,7 @@ OPTIONAL_FIELDS = [
     ("product", lambda v: v in ["premium", "free", "open"]),
 ]
 
+
 @pytest.mark.optional_fields
 @pytest.mark.positive
 @pytest.mark.parametrize("field, validator", OPTIONAL_FIELDS)
@@ -78,8 +82,8 @@ def test_user_profile_optional_field_behavior(spotify_user_client, field, valida
 
     json_data = response.json()
     if field in json_data:
-        assert validator(json_data[field]), (
-            f"❌ Field `{field}` present but value invalid: {json_data[field]}"
-        )
+        assert validator(
+            json_data[field]
+        ), f"❌ Field `{field}` present but value invalid: {json_data[field]}"
     else:
         pytest.skip(f"Optional field `{field}` not present in response")
