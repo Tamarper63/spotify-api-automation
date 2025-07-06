@@ -13,7 +13,7 @@ handler = OAuthHandler(
     client_id=client_id,
     client_secret=client_secret,
     redirect_uri=redirect_uri,
-    scopes=scopes
+    scopes=scopes,
 )
 
 tokens = handler.authorize()

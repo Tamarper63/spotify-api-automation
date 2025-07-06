@@ -1,11 +1,18 @@
 import pytest
 
-from tests.helpers.e2e_flows import create_test_playlist, get_user_id, add_and_verify_tracks, \
-    update_playlist_and_verify, validate_playlist_items, remove_and_reorder_track, cleanup_playlist
+from tests.helpers.e2e_flows import (
+    create_test_playlist,
+    get_user_id,
+    add_and_verify_tracks,
+    update_playlist_and_verify,
+    validate_playlist_items,
+    remove_and_reorder_track,
+    cleanup_playlist,
+)
 
 TRACKS = [
     "spotify:track:4iV5W9uYEdYUVa79Axb7Rh",  # Daft Punk
-    "spotify:track:1301WleyT98MSxVHPZCA6M"   # Arctic Monkeys
+    "spotify:track:1301WleyT98MSxVHPZCA6M",  # Arctic Monkeys
 ]
 
 
@@ -16,7 +23,9 @@ def test_full_playlist_lifecycle_flow(spotify_user_client):
 
     try:
         add_and_verify_tracks(spotify_user_client, playlist_id, TRACKS)
-        update_playlist_and_verify(spotify_user_client, playlist_id, new_name="updated_name")
+        update_playlist_and_verify(
+            spotify_user_client, playlist_id, new_name="updated_name"
+        )
         validate_playlist_items(spotify_user_client, playlist_id)
         remove_and_reorder_track(spotify_user_client, playlist_id, TRACKS[0])
     finally:

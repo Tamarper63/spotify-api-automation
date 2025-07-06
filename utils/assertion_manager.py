@@ -31,13 +31,17 @@ def assert_json_matches_expected(response_json: dict, expected: dict, context=""
         if isinstance(expected_value, dict):
             # Recurse into nested dicts
             actual_sub_json = response_json.get(key, {})
-            assert isinstance(actual_sub_json, dict), f"❌ {context}: `{key}` is not a dict in response"
-            assert_json_matches_expected(actual_sub_json, expected_value, context=f"{context}.{key}")
+            assert isinstance(
+                actual_sub_json, dict
+            ), f"❌ {context}: `{key}` is not a dict in response"
+            assert_json_matches_expected(
+                actual_sub_json, expected_value, context=f"{context}.{key}"
+            )
         else:
             actual_value = response_json.get(key)
-            assert actual_value == expected_value, (
-                f"❌ {context}.{key}: Expected '{expected_value}', got '{actual_value}'"
-            )
+            assert (
+                actual_value == expected_value
+            ), f"❌ {context}.{key}: Expected '{expected_value}', got '{actual_value}'"
 
 
 def assert_token_is_valid(token: str):
@@ -46,10 +50,10 @@ def assert_token_is_valid(token: str):
 
 
 def assert_error_response(
-        response,
-        expected_status_codes: int | list[int],
-        expected_message_substring: str | None = None,
-        context: str = "Error response validation"
+    response,
+    expected_status_codes: int | list[int],
+    expected_message_substring: str | None = None,
+    context: str = "Error response validation",
 ):
     assert_status_code_ok(response, expected_status_codes, context)
 
@@ -69,6 +73,7 @@ def assert_error_response(
         # Handle Spotify-style JSON error
         if isinstance(data.get("error"), dict):
             from infra.models.error_response import ErrorResponse
+
             error_model = ErrorResponse(**data)
             error_msg = error_model.error.message
         else:
@@ -81,7 +86,9 @@ def assert_error_response(
             )
 
     except Exception as e:
-        raise AssertionError(f"[{context}] Failed to extract error message: {e}\nResponse: {response.text}")
+        raise AssertionError(
+            f"[{context}] Failed to extract error message: {e}\nResponse: {response.text}"
+        )
 
 
 def assert_playlist_items_response_keys_exist(response):
@@ -101,9 +108,9 @@ def assert_playlist_items_match_model(response):
 
 def assert_playlist_items_with_limit(response, expected_limit: int):
     actual_limit = response.json().get("limit")
-    assert actual_limit == expected_limit, (
-        f"❌ Limit mismatch: expected {expected_limit}, got {actual_limit}"
-    )
+    assert (
+        actual_limit == expected_limit
+    ), f"❌ Limit mismatch: expected {expected_limit}, got {actual_limit}"
 
 
 def assert_playlist_items_schema(response):
@@ -123,7 +130,9 @@ def assert_playlist_items_schema(response):
             raise AssertionError(f"❌ Invalid playlist item at index {idx}: {e}")
 
 
-def assert_response_schema(response: dict, schema_model: type[BaseModel], context: str = ""):
+def assert_response_schema(
+    response: dict, schema_model: type[BaseModel], context: str = ""
+):
     """
     Validate that a response matches the expected schema.
     Raises an assertion error if validation fails.

@@ -14,7 +14,7 @@ def get_token_response(raw: bool = False) -> dict:
 
     headers = {
         "Authorization": f"Basic {_encode_client_credentials(settings.spotify_client_id, settings.spotify_client_secret)}",
-        "Content-Type": "application/x-www-form-urlencoded"
+        "Content-Type": "application/x-www-form-urlencoded",
     }
     data = {"grant_type": "client_credentials"}
 
