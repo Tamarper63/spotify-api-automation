@@ -4,7 +4,7 @@ from unittest import skip
 from pydantic_core import ValidationError
 
 from infra.api_clients.spotify_client import SpotifyClient
-from infra.config.settings import get_settings
+from infra.config.loader import load_config
 from infra.models.token_response import TokenResponse
 from utils.assertion_manager import (
     assert_token_is_valid,
@@ -76,7 +76,7 @@ def test_token_fails_with_partial_env(monkeypatch, env_to_delete):
     monkeypatch.delenv(env_to_delete, raising=False)
 
     with pytest.raises(ValidationError, match=env_to_delete):
-        _ = get_settings()
+        _ = load_config()
 
 
 @skip(reason="working only when run alone; fails in full suite due to .env caching")
@@ -90,7 +90,7 @@ def test_token_fails_with_all_env_missing(monkeypatch):
     monkeypatch.delenv("SPOTIFY_CLIENT_SECRET", raising=False)
 
     with pytest.raises(ValidationError, match="SPOTIFY_CLIENT_ID"):
-        _ = get_settings()
+        _ = load_config()
 
 
 @pytest.mark.negative

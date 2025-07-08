@@ -1,19 +1,27 @@
-import os
-from dotenv import load_dotenv
+from infra.config.loader import load_config
 from infra.auth.oauth_handler import OAuthHandler
 
-load_dotenv(override=True)
 
-client_id = os.getenv("SPOTIFY_CLIENT_ID")
-client_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
-redirect_uri = os.getenv("SPOTIFY_REDIRECT_URI")
-scopes = ["playlist-modify-public", "playlist-modify-private", "user-read-private"]
+def main():
+    config = load_config()
 
-handler = OAuthHandler(
-    client_id=client_id,
-    client_secret=client_secret,
-    redirect_uri=redirect_uri,
-    scopes=scopes,
-)
+    handler = OAuthHandler(
+        client_id=config.client_id,
+        client_secret=config.client_secret,
+        redirect_uri=config.spotify_redirect_uri,
+        scopes=[
+            "playlist-modify-public",
+            "playlist-modify-private",
+            "user-read-private",
+        ],
+    )
 
-tokens = handler.authorize()
+    tokens = handler.authorize()
+
+    print("\n✅ Access Token:", tokens["access_token"])
+    print("🔁 Refresh Token:", tokens.get("refresh_token", "(not returned)"))
+    print("⏳ Expires In:", tokens.get("expires_in", "unknown"), "seconds")
+
+
+if __name__ == "__main__":
+    main()

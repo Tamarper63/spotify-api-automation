@@ -1,32 +1,8 @@
-import os
 import time
+from infra.config.loader import load_config
+from infra.config.runtime_env_writer import update_runtime_env
 from infra.auth.oauth_handler import OAuthHandler
 from infra.auth.token_provider import get_token_response
-
-
-def update_dotenv(key: str, value: str):
-    from pathlib import Path
-
-    env_path = Path(".env")
-    lines = []
-    found = False
-
-    if not env_path.exists():
-        env_path.touch()
-
-    with open(env_path, "r") as f:
-        for line in f:
-            if line.startswith(f"{key}="):
-                lines.append(f"{key}={value}\n")
-                found = True
-            else:
-                lines.append(line)
-
-    if not found:
-        lines.append(f"{key}={value}\n")
-
-    with open(env_path, "w") as f:
-        f.writelines(lines)
 
 
 class TokenManager:
@@ -44,17 +20,20 @@ class TokenManager:
 
     @staticmethod
     def get_user_token() -> str:
-        access_token = os.getenv("SPOTIFY_USER_ACCESS_TOKEN")
-        expires_at = int(os.getenv("SPOTIFY_USER_EXPIRES_AT", "0"))
+        config = load_config()
+
+        access_token = config.spotify_user_access_token
+        expires_at = int(config.spotify_user_expires_at or "0")
 
         if not access_token or time.time() > expires_at:
-            refresh_token = os.getenv("SPOTIFY_REFRESH_TOKEN")
+            refresh_token = config.spotify_refresh_token
             if not refresh_token:
-                raise Exception("Missing refresh token in .env")
+                raise Exception("Missing refresh token in config")
+
             handler = OAuthHandler(
-                client_id=os.getenv("SPOTIFY_CLIENT_ID"),
-                client_secret=os.getenv("SPOTIFY_CLIENT_SECRET"),
-                redirect_uri=os.getenv("SPOTIFY_REDIRECT_URI"),
+                client_id=config.client_id,
+                client_secret=config.client_secret,
+                redirect_uri=config.spotify_redirect_uri,
                 scopes=[
                     "playlist-modify-public",
                     "playlist-modify-private",
@@ -64,6 +43,8 @@ class TokenManager:
             tokens = handler.refresh_user_token(refresh_token)
             access_token = tokens["access_token"]
             expires_at = int(time.time()) + tokens.get("expires_in", 3600)
-            update_dotenv("SPOTIFY_USER_ACCESS_TOKEN", access_token)
-            update_dotenv("SPOTIFY_USER_EXPIRES_AT", str(expires_at))
+
+            update_runtime_env("SPOTIFY_USER_ACCESS_TOKEN", access_token)
+            update_runtime_env("SPOTIFY_USER_EXPIRES_AT", str(expires_at))
+
         return access_token
