@@ -1,7 +1,9 @@
+import pydantic_core
 import pytest
+from jsonschema import ValidationError
 
 from infra.api_clients.spotify_client import SpotifyClient
-from infra.config.settings import get_settings
+from infra.config.loader import load_config
 from infra.http.request_handler import RequestHandler
 from tests.playlists.track_fixtures import sample_uris, invalid_track_uri
 
@@ -12,13 +14,18 @@ def unauthenticated_playlist_client():
 
 
 @pytest.fixture(scope="session")
-def settings():
-    return get_settings()
+def config():
+    try:
+        return load_config()
+    except pydantic_core.ValidationError as e:
+        print("🧨 MISSING CONFIG:", e.errors())
+        raise
+
 
 
 @pytest.fixture(scope="session")
-def default_playlist_id(settings) -> str:
-    return settings.default_playlist_id
+def default_playlist_id(config) -> str:
+    return config.default_playlist_id
 
 
 @pytest.fixture

@@ -1,6 +1,7 @@
 import base64
 import time
-from infra.config.settings import get_settings
+
+from infra.config.loader import load_config
 from infra.http.request_sender import _send_request
 from utils.log_utils import log_api_call
 
@@ -10,9 +11,9 @@ class SpotifyClient:
         self, request_handler=None, client_id: str = None, client_secret: str = None
     ):
         self.request_handler = request_handler
-        settings = get_settings()
-        self.client_id = client_id or settings.spotify_client_id
-        self.client_secret = client_secret or settings.spotify_client_secret
+        config = load_config()
+        self.client_id = client_id or config.client_id
+        self.client_secret = client_secret or config.client_secret
         self.token_url = "https://accounts.spotify.com/api/token"
 
     def _log_and_call(self, method: str, url: str, *, http_method: str, **kwargs):
