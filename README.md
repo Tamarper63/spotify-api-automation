@@ -1,15 +1,15 @@
-
 # Spotify API Automation
 
-[![Test Suite](https://img.shields.io/badge/tests-passing-brightgreen)](./reports)
-[![Coverage](https://img.shields.io/badge/coverage-95%25-green)](./reports)
+[![Test Suite](https://img.shields.io/badge/tests-passing-brightgreen)](./reports)  
+[![Coverage](https://img.shields.io/badge/coverage-95%25-green)](./reports)  
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 ---
 
-> **End-to-end automation and validation suite for the Spotify Web API**
-> - Unified client architecture, layered config, and strict modular conventions
-> - Designed for reliability, coverage, and maintainability at scale
+> **End-to-end automation suite for the Spotify Web API**
+> - Full test coverage over major playlist/user/search endpoints
+> - Refactored client design with unified handlers, token flow, and log layer
+> - Built for modularity, maintainability, and fast regression tracking
 
 ---
 
@@ -19,120 +19,141 @@
 git clone https://github.com/YOUR_ORG/spotify-api-automation.git
 cd spotify-api-automation
 
-# Install dependencies (preferably in a venv)
+# Install dependencies (in a virtualenv)
 pip install -r requirements.txt
 
-# Set up environment (copy .env.example to .env and fill secrets)
+# Setup environment
 cp .env.example .env
-# Edit .env with your Spotify API credentials
+# Insert your Spotify credentials in .env
 
-# Run full test suite
+# Run tests
 pytest --maxfail=1 --disable-warnings -v
 
-# Generate HTML report (optional)
+# Generate HTML report
 pytest --html=reports/report.html
 ```
 
 ---
 
-## 🏗️ Architecture Overview
+## 🏗️ Project Structure
 
 ```
 project/
 ├── infra/
-│   ├── api_clients/      # SpotifyClient (all endpoints)
-│   ├── auth/             # Token flows (user, client)
-│   ├── config/           # Settings, .env, config manager
-│   ├── http/             # Low-level HTTP & handlers
-│   └── models/           # Pydantic response schemas
+│   ├── api_clients/         # SpotifyClient: All endpoint wrappers
+│   ├── auth/                # TokenManager: user/client flows
+│   ├── config/              # .env parser + config loader
+│   ├── http/                # Unified request sender + response handler
+│   └── models/              # Pydantic schemas (used & optimized only)
 ├── tests/
-│   ├── playlists/        # Playlist endpoint tests
-│   ├── search/           # Search API tests
-│   ├── user/             # User profile/tests
-│   ├── browse/           # Browse/featured API tests
-│   └── conftest.py       # Pytest fixtures
-├── utils/                # Assertions, images, logging
-├── scripts/              # CLI/test runners, helpers
-├── reports/              # Test and coverage reports
-├── requirements.txt      # Python dependencies
-├── Dockerfile            # Container support
-├── docker-compose.yml    # Local infra orchestration
+│   ├── playlists/           # Unified + refactored tests per endpoint
+│   ├── browse/              # Featured playlists
+│   ├── search/              # /search endpoint tests
+│   ├── user/                # Top artists, profile, history
+│   └── data/assets/         # JPEGs, base64, static data
+├── utils/                   # image_utils, assertions, logging
+├── scripts/                 # CLI runners and test entrypoints
+├── reports/                 # Test results & coverage HTML
+├── requirements.txt
+├── Dockerfile
+├── docker-compose.yml
 └── README.md
 ```
 
-- **Pattern**: Layered (Infra, Client, Models, Tests, Utils)
-- **Token Handling**: Centralized via `TokenManager`
-- **All HTTP**: Routed via `RequestHandler` for logging/metrics
-- **Schema**: Strict Pydantic models
+- **Architecture**: Layered + isolated per concern  
+- **Clients**: Single entrypoint via `SpotifyClient`  
+- **HTTP**: Central `_send_request()` with logging/metrics  
+- **Auth**: `TokenManager` with support for both flows  
+- **Tests**: Fully migrated, each endpoint has one refactored suite  
 
 ---
 
 ## 🔐 Authentication
 
-- Supports both Client Credentials and User Auth (Authorization Code Flow)
-- Secrets managed via `.env` and `infra/config/settings.py`
-- Safe token propagation for all tests
+- Supports:
+  - **Client Credentials Flow**  
+  - **Authorization Code Flow (User Token)**  
+- Tokens managed via `infra/auth/token_manager.py`  
+- Test isolation per token type  
+- `.env` defines all secrets
 
 ---
 
-## 🧪 Test Structure
+## 🧪 Test Strategy
 
-- **Framework**: [pytest](https://docs.pytest.org/)
-- **Discovery**: All tests under `/tests`, modularized per API
-- **Fixtures**: Isolated and reusable, found in `conftest.py`
-- **Tags/Markers**: `@pytest.mark.positive`, `@pytest.mark.negative`
-- **Data**: Static data in `/tests/data`, YAML or JSON
-- **Coverage**: Reports in `/reports` (HTML via pytest-html)
+- **Framework**: `pytest`  
+- **Structure**: Flat test files per endpoint, both positive and negative  
+- **Fixtures**: Shared via `conftest.py`  
+- **Data**: JPEGs, invalid payloads, base64 files – in `/tests/data/assets/`  
+- **Tags**: `@pytest.mark.positive`, `@pytest.mark.negative`  
+- **Flow Test**: End-to-end created under `test_playlist_flow.py`
 
-#### Example
-
+#### Example:
 ```python
 @pytest.mark.positive
-def test_create_playlist(spotify_user_client, user_id):
-    playlist = spotify_user_client.create_playlist(user_id, name="My Playlist")
-    assert playlist["name"] == "My Playlist"
+def test_update_playlist_cover_image_valid():
+    image_data = load_valid_base64_image("test.jpg")
+    response = spotify_user_client.update_playlist_cover_image(playlist_id, image_data)
+    assert response.status_code == 202
 ```
 
 ---
 
 ## ⚙️ Configuration
 
-- All config is handled via `.env` and `infra/config/settings.py`
-- Supports secret rotation, custom endpoints, and local/CI overrides
+- All configuration handled via `infra/config/settings.py`  
+- `.env` file defines:
+  - Client ID / Secret  
+  - Redirect URI  
+  - Test playlist ID, etc.
 
 ---
 
-## 🏆 Best Practices
+## 📊 Reports
 
-- No unused imports, dead code, or test debris (checked by CI)
-- Unified logging via `log_utils` for all HTTP and API calls
-- SRP: Each model, service, and utility with single, testable responsibility
-- Validated against high-standard public repos
-
----
-
-## 🤝 Contributing
-
-1. Fork this repo
-2. Create a branch (`feature/xyz`)
-3. Run lint (`flake8`), format (`black`), and full tests (`pytest`)
-4. Open a PR—describe context and changes
-
-Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for details.
+- HTML test reports generated via `pytest-html`  
+- Located in `./reports/report.html`  
+- Coverage reports available via `pytest-cov`
 
 ---
 
-## 📄 Documentation
+## 🧼 Code Quality
 
-- [Spotify API Docs](https://developer.spotify.com/documentation/web-api)
-- [Pytest Docs](https://docs.pytest.org/)
-- [Pydantic Docs](https://docs.pydantic.dev/)
+- No unused imports, duplications, or dead code (validated)  
+- `log_utils.py` wraps all API calls with timing, response tracking  
+- SOLID & SRP enforced across models and utilities  
+- All code reviewed and normalized across modules  
 
 ---
 
-## 🛡️ License
+## 🛠 CI/CD Ready
 
-MIT License (c) [YOUR_ORG]
+- Can be integrated into GitHub Actions, CircleCI or local pipelines  
+- Output includes test status, coverage, and refactor logs
+
+---
+
+## 🧩 Contributing
+
+1. Fork repo  
+2. Create branch (`feature/xyz`)  
+3. Run formatters + tests (`black`, `flake8`, `pytest`)  
+4. Open PR with context and references
+
+---
+
+## 📚 References
+
+- [Spotify API Docs](https://developer.spotify.com/documentation/web-api)  
+- [Pytest Docs](https://docs.pytest.org/)  
+- [Pydantic](https://docs.pydantic.dev/)  
+- [pytest-html](https://pypi.org/project/pytest-html/)
+
+---
+
+## 📄 License
+
+MIT © [YOUR_ORG]
 
 ---
 
