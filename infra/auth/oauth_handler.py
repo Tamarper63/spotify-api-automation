@@ -1,7 +1,6 @@
-import requests
 import webbrowser
 import urllib.parse
-from infra.auth.user_token_provider import exchange_code_for_token
+from infra.auth.user_token_provider import exchange_code_for_token, refresh_token
 
 
 class OAuthHandler:
@@ -37,13 +36,4 @@ class OAuthHandler:
         )
 
     def refresh_user_token(self, token: str) -> dict:
-        response = requests.post(
-            "https://accounts.spotify.com/api/token",
-            data={
-                "grant_type": "refresh_token",
-                "refresh_token": token,
-            },
-            auth=(self.client_id, self.client_secret),
-        )
-        response.raise_for_status()
-        return response.json()
+        return refresh_token(token, self.client_id, self.client_secret)
