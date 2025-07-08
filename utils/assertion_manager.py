@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import requests
 from pydantic import ValidationError, BaseModel
 from infra.models.playlist_response import PlaylistTrackResponse, PlaylistItem
