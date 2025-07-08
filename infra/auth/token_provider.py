@@ -1,6 +1,6 @@
 import base64
 import requests
-from infra.config.settings import get_settings
+from infra.config.loader import load_config
 
 
 def _encode_client_credentials(client_id: str, client_secret: str) -> str:
@@ -9,11 +9,11 @@ def _encode_client_credentials(client_id: str, client_secret: str) -> str:
 
 
 def get_token_response(raw: bool = False) -> dict:
-    settings = get_settings()
+    config = load_config()
     token_url = "https://accounts.spotify.com/api/token"
 
     headers = {
-        "Authorization": f"Basic {_encode_client_credentials(settings.spotify_client_id, settings.spotify_client_secret)}",
+        "Authorization": f"Basic {_encode_client_credentials(config.client_id, config.client_secret)}",
         "Content-Type": "application/x-www-form-urlencoded",
     }
     data = {"grant_type": "client_credentials"}

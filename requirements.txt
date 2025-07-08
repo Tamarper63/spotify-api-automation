@@ -3,6 +3,7 @@ python-dotenv==1.0.1
 pytest==8.2.2
 pyyaml~=6.0.2
 jsonschema
+pydantic_settings
 pytest-html
 pydantic~=2.11.6
 pydantic_core~=2.33.2

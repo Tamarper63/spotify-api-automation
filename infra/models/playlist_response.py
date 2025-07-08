@@ -1,7 +1,8 @@
 # infra/models/playlist_response.py
+from __future__ import annotations
 
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ExternalUrls(BaseModel):
@@ -42,7 +43,7 @@ class PlaylistResponse(BaseModel):
     external_urls: ExternalUrls
     href: str
     id: str
-    images: List[Image]
+    images: Optional[List[Image]] = Field(default_factory=list)
     name: str
     owner: Owner
     primary_color: Optional[str]
