@@ -41,5 +41,3 @@ tokens = handler.authorize()
 update_dotenv("SPOTIFY_USER_ACCESS_TOKEN", tokens["access_token"])
 update_dotenv("SPOTIFY_REFRESH_TOKEN", tokens["refresh_token"])
 update_dotenv("SPOTIFY_USER_EXPIRES_AT", str(int(time.time()) + tokens["expires_in"]))
-
-print("✅ Tokens successfully written to .env")

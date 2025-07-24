@@ -33,6 +33,3 @@ create_response.raise_for_status()
 
 playlist_id = create_response.json()["id"]
 playlist_url = create_response.json()["external_urls"]["spotify"]
-
-print(f"✅ Playlist created: {playlist_url}")
-print(f"🆔 Playlist ID: {playlist_id}")

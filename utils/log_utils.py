@@ -1,12 +1,10 @@
-# utils/log_utils.py
-
 import json
 import pytest
+import logging
 
+logger = logging.getLogger("spotify_test")
 
-def log_api_call(
-    method: str, url: str, status_code: int, elapsed_ms: int, response_body=None
-):
+def log_api_call(method: str, url: str, status_code: int, elapsed_ms: int, response_body=None):
     entry = f"{method} {url}\n⏱ {elapsed_ms} ms | 📦 Status: {status_code}"
     if response_body:
         try:
@@ -19,3 +17,10 @@ def log_api_call(
         pytest.current_test_node.setdefault("perf_logs", []).append(entry)
     else:
         print(f"[log fallback] {entry}")
+
+
+def log_warning(message: str):
+    """
+    Log a warning outside the test node context (e.g., in conftest, setup, fixtures).
+    """
+    logger.warning(f"⚠️ {message}")

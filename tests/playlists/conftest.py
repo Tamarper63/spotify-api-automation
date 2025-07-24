@@ -18,10 +18,7 @@ def config():
     try:
         return load_config()
     except pydantic_core.ValidationError as e:
-        print("🧨 MISSING CONFIG:", e.errors())
-        raise
-
-
+        pytest.fail(f"🧨 MISSING CONFIG: {e.errors()}", pytrace=False)
 
 @pytest.fixture(scope="session")
 def default_playlist_id(config) -> str:
