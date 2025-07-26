@@ -1,8 +1,7 @@
 import time
-from infra.config.loader import load_config
-from infra.config.runtime_env_writer import update_runtime_env
 from infra.auth.oauth_handler import OAuthHandler
 from infra.auth.token_provider import get_token_response
+from infra.config.runtime_env_writer import update_runtime_env
 
 
 class TokenManager:
@@ -10,18 +9,24 @@ class TokenManager:
     _expires_at = 0
 
     @classmethod
-    def get_token(cls) -> str:
+    def get_token(cls, config) -> str:
+        """
+        Returns a cached app-level token, refreshing it when expired.
+        Requires config with client_id and client_secret.
+        """
         now = time.time()
         if cls._token is None or now >= cls._expires_at:
-            response = get_token_response()
+            response = get_token_response(config.client_id, config.client_secret)
             cls._token = response["access_token"]
             cls._expires_at = now + response["expires_in"] - 5
         return cls._token
 
     @staticmethod
-    def get_user_token() -> str:
-        config = load_config()
-
+    def get_user_token(config) -> str:
+        """
+        Returns a user-level access token, refreshing via refresh_token if expired.
+        Requires config with spotify_user_access_token, expires_at, refresh_token, etc.
+        """
         access_token = config.spotify_user_access_token
         expires_at = int(config.spotify_user_expires_at or "0")
 

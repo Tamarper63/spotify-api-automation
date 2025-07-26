@@ -1,3 +1,4 @@
+import os
 from infra.config.loader import load_config
 from infra.auth.oauth_handler import OAuthHandler
 
@@ -18,9 +19,15 @@ def main():
 
     tokens = handler.authorize()
 
-    print("\n✅ Access Token:", tokens["access_token"])
-    print("🔁 Refresh Token:", tokens.get("refresh_token", "(not returned)"))
-    print("⏳ Expires In:", tokens.get("expires_in", "unknown"), "seconds")
+    # Safe CLI output block
+    output = [
+        f"\n✅ Access Token: {tokens['access_token']}",
+        f"🔁 Refresh Token: {tokens.get('refresh_token', '(not returned)')}",
+        f"⏳ Expires In: {tokens.get('expires_in', 'unknown')} seconds",
+    ]
+
+    for line in output:
+        print(line)
 
 
 if __name__ == "__main__":

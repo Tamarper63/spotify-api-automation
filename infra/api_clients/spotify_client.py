@@ -2,7 +2,7 @@ import base64
 import time
 
 from infra.config.loader import load_config
-from infra.http.request_sender import _send_request
+from infra.http.base_request_engine import _send_request
 from utils.log_utils import log_api_call
 
 
