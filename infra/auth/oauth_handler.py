@@ -1,5 +1,6 @@
 import webbrowser
 import urllib.parse
+
 from infra.auth.user_token_provider import exchange_code_for_token, refresh_token
 
 
@@ -12,7 +13,7 @@ class OAuthHandler:
         self.redirect_uri = redirect_uri
         self.scopes = scopes
 
-    def authorize(self):
+    def get_authorization_url(self) -> str:
         params = {
             "client_id": self.client_id,
             "response_type": "code",
@@ -20,14 +21,18 @@ class OAuthHandler:
             "scope": " ".join(self.scopes),
             "show_dialog": "true",
         }
+        return f"{self.AUTH_URL}?{urllib.parse.urlencode(params)}"
 
-        url = f"{self.AUTH_URL}?{urllib.parse.urlencode(params)}"
+    def authorize(self) -> dict:
+        """
+        Interactive authorization flow: opens browser and waits for user to paste code.
+        """
+        url = self.get_authorization_url()
         webbrowser.open(url)
         auth_code = input("🔐 Paste the redirected code here: ").strip()
-
         return self.exchange_code_for_token(auth_code)
 
-    def exchange_code_for_token(self, code):
+    def exchange_code_for_token(self, code: str) -> dict:
         return exchange_code_for_token(
             code=code,
             client_id=self.client_id,
