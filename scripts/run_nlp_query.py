@@ -1,4 +1,8 @@
+import sys
+from pathlib import Path
+
 from tools.nlp_to_api.query_engine import query_api_with_nlp
+sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 def main():
     question = "תראה לי את האומנים הכי מושמעים שלי"

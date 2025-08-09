@@ -1,0 +1,26 @@
+[project]
+name = "spotify-api-automation"
+version = "0.0.1"
+description = "Spotify API automation with NL → API bridge"
+requires-python = ">=3.9"
+dependencies = [
+  "openai~=1.98.0",
+  "python-dotenv>=1.0.0",
+  "requests>=2.31.0",
+]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+include-package-data = true
+
+# גלה חבילות אוטומטית במבנה הקיים (ללא src/)
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["tools*", "scripts*"]
+
+# יצירת CLI בשם spotify-nlp שמריץ את main()
+[project.scripts]
+spotify-nlp = "scripts.run_nlp_query:main"
