@@ -41,7 +41,7 @@ python scripts/run_nlp_query.py
 ```
 **Input:**
 ```
-תראה לי את האומנים הכי מושמעים שלי
+ Which endpoint allows me to update playlist details?
 ```
 **Output:**
 ```
@@ -173,3 +173,76 @@ pytest --cov=.
 
 ## 📄 License
 MIT © [YOUR_ORG]
+
+
+## AI-Assisted Documentation Chat (`run_doc_chat`)
+
+This project includes an AI-assisted Documentation Chat tool integrated into the automation framework. 
+The `run_doc_chat` script allows developers and QA engineers to query project documentation through a Retrieval-Augmented Generation (RAG) pipeline and receive precise, context-based answers from a local LLM (Ollama).
+
+### Features
+- **Local LLM (Ollama) Integration**: Runs fully offline without cloud dependencies.
+- **RAG Context Retrieval**: Retrieves the most relevant documentation snippets from local sources before answering.
+- **Context-Constrained Responses**: AI responds only with information present in the retrieved context.
+- **Developer-Friendly Output**: Technical, concise, and ready for integration into development/test workflows.
+
+### Prerequisites
+- **Python**: 3.9+
+- **Ollama**: Installed locally and running (default: `http://localhost:11434`)
+- **Model**: A supported model pulled locally, for example:
+  ```bash
+  ollama pull llama3
+  ```
+- **Dependencies**:
+  ```bash
+  pip install -r requirements.txt
+  ```
+
+### Environment Variables
+```bash
+LLM_PROVIDER=ollama
+OLLAMA_MODEL=llama3
+OLLAMA_HOST=http://localhost:11434
+```
+> The RAG retriever expects your documentation to be indexed and accessible to `tools.rag.search.retrieve`.
+
+### Usage
+Interactive mode:
+```bash
+python run_doc_chat.py
+```
+Example:
+```
+>> Doc Chat (Ollama). Press Ctrl+C to exit.
+
+Question: How do I authenticate with the Spotify API?
+Answer:
+[Technical explanation sourced only from context...]
+```
+
+Optional arguments:
+```bash
+python run_doc_chat.py -k 8 --temperature 0.0 --stream
+```
+- `-k`: Number of context chunks to retrieve (default: 6).
+- `--temperature`: LLM sampling temperature (default: 0.1).
+- `--stream`: Enable streaming responses (if supported).
+
+### Best Practices
+- Keep documentation updated so the retriever returns accurate results.
+- Use specific, technical questions for more precise answers.
+- Regularly verify Ollama model and retriever configurations.
+
+### Relevant Project Structure
+```
+project_root/
+│
+├── tools/
+│   ├── rag/
+│   │   └── search.py               # Context retrieval logic
+│   └── local_llm/
+│       └── ollama_client.py        # Ollama API client
+│
+├── run_doc_chat.py                  # Entry point script
+└── docs/                            # Documentation corpus used by RAG
+```
