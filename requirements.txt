@@ -2,8 +2,8 @@ requests~=2.32.4
 python-dotenv==1.0.1
 pytest==8.2.2
 pyyaml~=6.0.2
-jsonschema
-pydantic_settings
+jsonschema~=4.24.0
+pydantic_settings~=2.10.1
 pytest-html
 pydantic~=2.11.6
 pydantic_core~=2.33.2
@@ -12,4 +12,6 @@ pydantic-settings
 autoflake
 flake8
 black
+openai~=1.98.0
+python-dotenv>=1.0.0
 
