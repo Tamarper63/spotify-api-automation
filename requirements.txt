@@ -14,4 +14,5 @@ flake8
 black
 openai~=1.98.0
 python-dotenv>=1.0.0
-
+numpy>=1.24
+scikit-learn>=1.4
