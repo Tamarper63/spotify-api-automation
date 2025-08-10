@@ -1,160 +1,175 @@
 # Spotify API Automation
 
-[![Test Suite](https://img.shields.io/badge/tests-passing-brightgreen)](./reports)  
-[![Coverage](https://img.shields.io/badge/coverage-95%25-green)](./reports)  
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-
----
-
-> **End-to-end automation suite for the Spotify Web API**
-> - Full test coverage over major playlist/user/search endpoints
-> - Refactored client design with unified handlers, token flow, and log layer
-> - Built for modularity, maintainability, and fast regression tracking
+## Overview
+End-to-end automation test suite for the **Spotify Web API**, built for:
+- **Full endpoint coverage**: playlists, search, browse, user profile/history.
+- **Unified transport layer**: all HTTP requests routed via `RequestHandler.send()` with retries, backoff, and logging.
+- **Config-driven architecture**: Pydantic-based `AppConfig` with `.env` support.
+- **NLP → API (LLM Integration)**: Translate natural language into valid Spotify API requests using a local LLM (Ollama).
+- **Maintainable test design**: modular, SRP-aligned, ready for CI/CD.
 
 ---
 
 ## 🚀 Quickstart
 
 ```bash
+# Clone repository
 git clone https://github.com/YOUR_ORG/spotify-api-automation.git
 cd spotify-api-automation
 
-# Install dependencies (in a virtualenv)
+# Install dependencies
 pip install -r requirements.txt
 
-# Setup environment
+# Copy example env file and edit values
 cp .env.example .env
-# Insert your Spotify credentials in .env
 
-# Run tests
-pytest --maxfail=1 --disable-warnings -v
+# Run all tests
+pytest --disable-warnings -v
 
-# Generate HTML report
+# Generate HTML test report
 pytest --html=reports/report.html
 ```
 
 ---
 
-## 🏗️ Project Structure
+## 🧠 LLM Feature: NLP → API
+This feature converts **natural language queries** into structured Spotify Web API requests.
+
+**Example:**
+```bash
+python scripts/run_nlp_query.py
+```
+**Input:**
+```
+תראה לי את האומנים הכי מושמעים שלי
+```
+**Output:**
+```
+--- NLP → API Result ---
+Method: GET
+URL: https://api.spotify.com/v1/me/top/artists
+Headers: {...}
+Body: None
+```
+
+**Configuration:**
+- `.env` must include:
+```env
+LLM_PROVIDER=ollama
+OLLAMA_MODEL=mistral
+```
+- Requires [Ollama](https://ollama.com/) running locally (`brew install ollama`).
+
+---
+
+## 🏗 Project Structure
 
 ```
 project/
 ├── infra/
-│   ├── api_clients/         # SpotifyClient: All endpoint wrappers
-│   ├── auth/                # TokenManager: user/client flows
-│   ├── config/              # .env parser + config loader
-│   ├── http/                # Unified request sender + response handler
-│   └── models/              # Pydantic schemas (used & optimized only)
+│   ├── api_clients/         # SpotifyClient - thin endpoint wrappers
+│   ├── auth/                # TokenManager & providers
+│   ├── config/              # AppConfig (pydantic settings)
+│   ├── http/                # RequestHandler + _send_request
+│   └── models/              # Pydantic schemas
 ├── tests/
-│   ├── playlists/           # Unified + refactored tests per endpoint
+│   ├── playlists/           # Unified per-endpoint test suites
 │   ├── browse/              # Featured playlists
-│   ├── search/              # /search endpoint tests
-│   ├── user/                # Top artists, profile, history
-│   └── data/assets/         # JPEGs, base64, static data
-├── utils/                   # image_utils, assertions, logging
-├── scripts/                 # CLI runners and test entrypoints
-├── reports/                 # Test results & coverage HTML
+│   ├── search/              # Search endpoint
+│   ├── user/                # User profile/history
+│   └── data/assets/         # Test images, payloads
+├── utils/                   # Logging, assertions, image utils
+├── scripts/                 # CLI scripts (incl. NLP → API runner)
+├── reports/                 # HTML & coverage reports
 ├── requirements.txt
-├── Dockerfile
-├── docker-compose.yml
 └── README.md
 ```
-
-- **Architecture**: Layered + isolated per concern  
-- **Clients**: Single entrypoint via `SpotifyClient`  
-- **HTTP**: Central `_send_request()` with logging/metrics  
-- **Auth**: `TokenManager` with support for both flows  
-- **Tests**: Fully migrated, each endpoint has one refactored suite  
 
 ---
 
 ## 🔐 Authentication
 
-- Supports:
-  - **Client Credentials Flow**  
-  - **Authorization Code Flow (User Token)**  
-- Tokens managed via `infra/auth/token_manager.py`  
-- Test isolation per token type  
-- `.env` defines all secrets
+**Supported flows:**
+- **Client Credentials Flow** (App token)
+- **Authorization Code Flow** (User token)
+
+**Env variables:**
+```env
+SPOTIFY_CLIENT_ID=your_client_id
+SPOTIFY_CLIENT_SECRET=your_client_secret
+SPOTIFY_REDIRECT_URI=http://localhost:8888/callback
+SPOTIFY_REFRESH_TOKEN=...
+SPOTIFY_USER_ACCESS_TOKEN=...
+DEFAULT_PLAYLIST_ID=...
+```
 
 ---
 
 ## 🧪 Test Strategy
+- **Framework**: pytest
+- **Fixtures**: centralized in `conftest.py`
+- **Structure**: endpoint-focused test files (positive + negative in same file)
+- **Tags**: `@pytest.mark.positive` / `@pytest.mark.negative`
+- **Flow tests**: E2E scenario in `test_playlist_flow.py`
 
-- **Framework**: `pytest`  
-- **Structure**: Flat test files per endpoint, both positive and negative  
-- **Fixtures**: Shared via `conftest.py`  
-- **Data**: JPEGs, invalid payloads, base64 files – in `/tests/data/assets/`  
-- **Tags**: `@pytest.mark.positive`, `@pytest.mark.negative`  
-- **Flow Test**: End-to-end created under `test_playlist_flow.py`
-
-#### Example:
+Example:
 ```python
 @pytest.mark.positive
-def test_update_playlist_cover_image_valid():
-    image_data = load_valid_base64_image("test.jpg")
-    response = spotify_user_client.update_playlist_cover_image(playlist_id, image_data)
-    assert response.status_code == 202
+def test_create_playlist_should_return_201(spotify_user_client, user_id):
+    response = spotify_user_client.create_playlist(user_id, "Automation Playlist")
+    assert response.status_code == 201
 ```
 
 ---
 
 ## ⚙️ Configuration
-
-- All configuration handled via `infra/config/settings.py`  
-- `.env` file defines:
-  - Client ID / Secret  
-  - Redirect URI  
-  - Test playlist ID, etc.
+- **File**: `infra/config/settings.py`
+- **Base**: Pydantic `BaseSettings`
+- **Extra handling**: `extra="ignore"` to allow unrelated env vars (e.g., `LLM_PROVIDER`).
 
 ---
 
 ## 📊 Reports
-
-- HTML test reports generated via `pytest-html`  
-- Located in `./reports/report.html`  
-- Coverage reports available via `pytest-cov`
+Generate HTML report:
+```bash
+pytest --html=reports/report.html
+```
+Coverage report:
+```bash
+pytest --cov=.
+```
 
 ---
 
 ## 🧼 Code Quality
-
-- No unused imports, duplications, or dead code (validated)  
-- `log_utils.py` wraps all API calls with timing, response tracking  
-- SOLID & SRP enforced across models and utilities  
-- All code reviewed and normalized across modules  
+- **No dead code** (validated)
+- **Centralized HTTP transport**
+- **Logging**: unified via `log_api_call`
+- **SOLID** principles applied in client/auth/http layers
 
 ---
 
 ## 🛠 CI/CD Ready
-
-- Can be integrated into GitHub Actions, CircleCI or local pipelines  
-- Output includes test status, coverage, and refactor logs
+- Easily integrated with GitHub Actions, CircleCI, or Jenkins
+- Output includes test results, coverage, and logs
 
 ---
 
 ## 🧩 Contributing
-
-1. Fork repo  
-2. Create branch (`feature/xyz`)  
-3. Run formatters + tests (`black`, `flake8`, `pytest`)  
+1. Fork the repo
+2. Create a branch (`feature/xyz`)
+3. Run `black`, `flake8`, and `pytest`
 4. Open PR with context and references
 
 ---
 
 ## 📚 References
-
-- [Spotify API Docs](https://developer.spotify.com/documentation/web-api)  
-- [Pytest Docs](https://docs.pytest.org/)  
-- [Pydantic](https://docs.pydantic.dev/)  
-- [pytest-html](https://pypi.org/project/pytest-html/)
+- [Spotify API Docs](https://developer.spotify.com/documentation/web-api)
+- [Pytest Docs](https://docs.pytest.org)
+- [Pydantic](https://docs.pydantic.dev)
+- [Ollama](https://ollama.com/)
 
 ---
 
 ## 📄 License
-
 MIT © [YOUR_ORG]
-
----
-
-*For architecture questions, bug reports, or feature requests, please open a GitHub issue.*
