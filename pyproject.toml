@@ -24,3 +24,12 @@ include = ["tools*", "scripts*"]
 # יצירת CLI בשם spotify-nlp שמריץ את main()
 [project.scripts]
 spotify-nlp = "scripts.run_nlp_query:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*", "*Tests"]
+python_functions = ["test_*"]
+norecursedirs = [".git", ".venv", "venv", "build", "dist", ".tox", ".pytest_cache"]
+addopts = "-ra"
+

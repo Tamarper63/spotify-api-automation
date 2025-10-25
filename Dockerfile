@@ -13,4 +13,4 @@ COPY . .
 ENV VIRTUAL_ENV=/opt/venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-CMD ["pytest"]
+CMD ["bash","-lc","pytest -vv -ra --html=/reports/report.html --self-contained-html"]
